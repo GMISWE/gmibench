@@ -23,8 +23,10 @@ First release. Tag: `standard-v1.0`.
   lowest cost per successful task on a core suite within its size class).
 - `tool_use_hard` is at 2.0.0 because v1 (3 simple tools) was replaced by the support-desk
   environment before release. The v1 tasks and results are in `results/archive/tool_use_hard_v1/`.
-- Results in `results/` were recorded on 2026-11-05/06 (manifest `legacy-pre-v1.0`) for 10
-  models; 3 were down on GMI and are "Not verified".
+- Results in `results/` were recorded on 2026-11-05/06 (manifest `legacy-pre-v1.0`) for 7
+  models. Nemotron 3.5 Super-VL, Nemotron 3.5 Lightning and gpt-oss-120b were down on GMI for
+  the whole run and were removed from the cohort; their failed runs are in
+  `results/archive/down_models/`.
 
 ### Harness
 

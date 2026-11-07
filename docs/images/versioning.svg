@@ -93,7 +93,7 @@
   <path class="dash" d="M440,492 H1140"/>
   <circle class="node-o" cx="150" cy="492" r="12"/>
   <text class="ink h" x="150" y="530" text-anchor="middle">v1.0 · 2026-11-06</text>
-  <text class="ink2 s" x="150" y="552" text-anchor="middle">6 suites, 120 tasks, 10 models</text>
+  <text class="ink2 s" x="150" y="552" text-anchor="middle">6 suites, 120 tasks, 7 models</text>
   <circle class="hollow" cx="560" cy="492" r="12"/>
   <text class="ink h" x="560" y="530" text-anchor="middle">v1.1 · next minor</text>
   <text class="ink2 s" x="560" y="552" text-anchor="middle">suite versions change or suites are added</text>

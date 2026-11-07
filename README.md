@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/banner.svg" alt="GMI Open Model Standard: a reproducible, versioned benchmark for open-weight models served on GMI Cloud. Standard v1.0, 6 suites, 120 tasks, 3 runs per task, 10 models." width="100%">
+  <img src="docs/images/banner.svg" alt="GMI Open Model Standard: a reproducible, versioned benchmark for open-weight models served on GMI Cloud. Standard v1.0, 6 suites, 120 tasks, 3 runs per task, 7 models." width="100%">
 </p>
 
 <p align="center">
@@ -36,7 +36,6 @@ means the same tasks and the same rules, and anyone can reproduce it.
 | MiniMax-M2.5 | large | GMI Production Ready | 95.8% | 80.0% | $0.00184 |
 | DeepSeek V4 Flash | large | GMI Verified | 90.8% | 81.7% | $0.00078 |
 | Qwen3.5 27B | small | GMI Verified | 87.8% | 80.6% | $0.00502 |
-| Nemotron 3.5 Super-VL, Nemotron 3.5 Lightning, gpt-oss-120b | | Not verified (endpoint down) | | | |
 
 Core suites set the tier; stress suites are a separate score. Full tables:
 [`results/summary.md`](results/summary.md) · per-model scorecards: `results/scorecard_*.md` ·
@@ -204,15 +203,11 @@ discount.
 only counts as vision-capable if GMI's endpoint accepts an image for it and the answer
 uses the image (MiniMax-M2.5 accepts the image but ignores it, so it is `false`).
 
-Three of the original seven (Nemotron 3.5 Super-VL, Nemotron 3.5 Lightning, gpt-oss-120b)
-were down on GMI on 2026-11-05 and 2026-11-06. They stay in the file and show as
-"Not verified". Three stand-ins with public weights were added in matching slots:
-Qwen3.5-122B-A10B (mid size, vision), Qwen3.5-27B (small, vision) and MiniMax-M2.5
-(text only). To re-run the original three when they are back:
-
-```bash
-python bench.py run --models gpt-oss-120b,nemotron-3.5-lightning,nemotron-3.5-super-vl --suites all --retry-errors
-```
+The cohort is 7 models. NVIDIA Nemotron 3.5 Super-VL, Nemotron 3.5 Lightning and
+gpt-oss-120b were planned but their GMI endpoints failed every request from 2026-11-05 to at
+least 2026-11-06 22:09 PST, so they were removed. Their failed runs are kept in
+`results/archive/down_models/`. To add them back when they work, restore their entries in
+`models.yaml` (see git history) and run `python bench.py run --models <name> --suites all`.
 
 ---
 

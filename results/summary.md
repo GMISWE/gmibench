@@ -13,9 +13,6 @@ Scored under **GMI Open Model Standard v1.0**.
 | qwen3.5-27b | GMI Verified | small | 87.8% | 80.6% | 76.7% | 1.95 s | 58.2 | $0.00502 | 4/4 | Tool use |
 | qwen3.6-35b-a3b | GMI Recommended | small | 97.2% | 95.6% | 93.3% | 0.90 s | 136.1 | $0.00740 | 4/4 | Tool use |
 | qwen3.5-122b-a10b | GMI Recommended | mid | 99.4% | 90.6% | 98.3% | 1.09 s | 159.7 | $0.00825 | 4/4 | Documents |
-| nemotron-3.5-super-vl | Not verified | mid | 0.0% | 0.0% | 0.0% | – s | – | – | 3/4 | – |
-| nemotron-3.5-lightning | Not verified | small | 0.0% | 0.0% | 0.0% | – s | – | – | 3/4 | – |
-| gpt-oss-120b | Not verified | mid | 0.0% | 0.0% | 0.0% | – s | – | – | 4/4 | – |
 
 Pass rate, consistency, TTFT and cost use the core suites (these set the tier). Hard pass rate is the separate stress score over the stress suites.
 
@@ -30,9 +27,6 @@ Pass rate, consistency, TTFT and cost use the core suites (these set the tier). 
 | qwen3.5-27b | small | ok | 80.0% | 65.0% | 1.89 s | $0.0145 |  |
 | qwen3.6-35b-a3b | small | ok | 91.7% | 80.0% | 0.83 s | $0.0218 |  |
 | qwen3.5-122b-a10b | mid | ok | 98.3% | 95.0% | 0.98 s | $0.0229 | yes |
-| nemotron-3.5-super-vl | mid | incomplete | 0.0% | 0.0% | – s | – |  |
-| nemotron-3.5-lightning | small | incomplete | 0.0% | 0.0% | – s | – |  |
-| gpt-oss-120b | mid | incomplete | 0.0% | 0.0% | – s | – |  |
 
 ## Tool use (core: sets the tier; sorted by cost per successful task)
 
@@ -55,7 +49,7 @@ Pass rate, consistency, TTFT and cost use the core suites (these set the tier). 
 | qwen3.5-27b | small | ok | 85.0% | 70.0% | 2.20 s | $0.00089 |  |
 | qwen3.5-122b-a10b | mid | ok | 100.0% | 100.0% | 1.71 s | $0.00101 | yes |
 
-n/a (not vision-capable): gpt-oss-120b, gemma-4-26b-a4b, deepseek-v4-flash, minimax-m2.5
+n/a (not vision-capable): gemma-4-26b-a4b, deepseek-v4-flash, minimax-m2.5
 
 ## Coding (hard) (stress: separate score; sorted by cost per successful task)
 
@@ -68,9 +62,6 @@ n/a (not vision-capable): gpt-oss-120b, gemma-4-26b-a4b, deepseek-v4-flash, mini
 | minimax-m2.5 | large | ok | 71.7% | 60.0% | 0.96 s | $0.0225 |  |
 | qwen3.6-35b-a3b | small | ok | 88.3% | 70.0% | 0.94 s | $0.0378 |  |
 | qwen3.5-122b-a10b | mid | ok | 85.0% | 65.0% | 0.90 s | $0.0448 |  |
-| nemotron-3.5-super-vl | mid | incomplete | 0.0% | 0.0% | – s | – |  |
-| nemotron-3.5-lightning | small | incomplete | 0.0% | 0.0% | – s | – |  |
-| gpt-oss-120b | mid | incomplete | 0.0% | 0.0% | – s | – |  |
 
 ## Tool use (hard) (stress: separate score; sorted by cost per successful task)
 
@@ -93,4 +84,4 @@ n/a (not vision-capable): gpt-oss-120b, gemma-4-26b-a4b, deepseek-v4-flash, mini
 | qwen3.5-27b | small | ok | 76.7% | 65.0% | 4.40 s | $0.00144 |  |
 | qwen3.5-122b-a10b | mid | ok | 100.0% | 100.0% | 3.16 s | $0.00146 |  |
 
-n/a (not vision-capable): gpt-oss-120b, gemma-4-26b-a4b, deepseek-v4-flash, minimax-m2.5
+n/a (not vision-capable): gemma-4-26b-a4b, deepseek-v4-flash, minimax-m2.5

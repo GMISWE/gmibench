@@ -49,6 +49,18 @@ Other models that also returned 503 `Max retries (2) exhausted` in this check:
 | gpt-oss-120b | 503 | `7f15b21b-c01a-4b88-b2b9-7627b27feed4` |
 | gpt-oss-120b | 503 | `b81a6b36-a004-4dfc-b37c-d14ff708f597` |
 
+**Re-test 2026-11-06 22:09 PST (2026-11-07 06:09 UTC):** still failing, same errors. We removed
+the three models from our benchmark cohort.
+
+| Model | HTTP | `x-gmi-request-id` |
+|---|---|---|
+| Nemotron-3.5-Lightning-30B-A3B-BF16 | 523 | `a9d0d230-1892-4774-9e2b-1ecaa67becae` |
+| Nemotron-3.5-Lightning-30B-A3B-BF16 | 523 | `c826ff0f-f1fd-4cfe-afd5-8e8f31517e31` |
+| Nemotron-3.5-Super-VL-120B-A12B-BF16 | 429 | `68139fd2-969e-4b05-a7b5-f2a2e53f1208` |
+| Nemotron-3.5-Super-VL-120B-A12B-BF16 | 429 | `d614a394-bde2-4344-8041-f6abc81cec5b` |
+| gpt-oss-120b | 503 | `26e49006-20b8-4321-ab8a-2c5be3b2f76d` |
+| gpt-oss-120b | 503 | `b7815525-5f6d-4911-a54b-e8c83ac4f380` |
+
 Sample requests used:
 
 ```json

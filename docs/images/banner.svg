@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="t d">
   <title id="t">GMI Open Model Standard</title>
-  <desc id="d">A reproducible, versioned benchmark for open-weight models served on GMI Cloud. Standard v1.0: 6 suites, 120 tasks, 3 runs per task, 10 models.</desc>
+  <desc id="d">A reproducible, versioned benchmark for open-weight models served on GMI Cloud. Standard v1.0: 6 suites, 120 tasks, 3 runs per task, 7 models.</desc>
   <style>
     :root { --bg:#ffffff; --panel:#f6f8fa; --line:#d0d7de; --ink:#1f2328; --ink2:#59636e;
             --blue:#2a78d6; --orange:#eb6834; --blue-soft:#ddeafb; --link:#c4c9cf; }
@@ -36,7 +36,7 @@
     <rect class="pill" x="424" y="226" width="146" height="34" rx="17"/>
     <text class="ink" x="497" y="248" text-anchor="middle">3 runs per task</text>
     <rect class="pill" x="582" y="226" width="104" height="34" rx="17"/>
-    <text class="ink" x="634" y="248" text-anchor="middle">10 models</text>
+    <text class="ink" x="634" y="248" text-anchor="middle">7 models</text>
   </g>
 
   <!-- Motif: a small core-vs-stress dumbbell chart -->
