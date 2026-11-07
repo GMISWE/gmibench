@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import difflib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -78,7 +79,7 @@ def check_coding(task: dict[str, Any], response: str, timeout_s: float = 10.0) -
     details: dict[str, Any] = {"returncode": proc.returncode}
     if not passed:
         details["reason"] = "tests failed"
-        details["stderr_tail"] = proc.stderr[-600:]
+        details["stderr_tail"] = proc.stderr.replace(os.path.realpath(tmp), "<tmp>").replace(tmp, "<tmp>")[-600:]
     return passed, details
 
 

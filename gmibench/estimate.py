@@ -28,7 +28,7 @@ def estimate(models: list[ModelSpec], suites: list[Suite], settings: RunSettings
                 continue
             kind = kind_of(suite)
             jobs = pending_jobs(suite.load_tasks(), store.load(m, suite.name), settings.runs_per_task,
-                                settings.retry_errors)
+                                settings.retry_errors, settings.rerun)
             jobs_n += len(jobs)
             for t, _ in jobs:
                 a, b, c = kind.estimate(t, suite, cfg)

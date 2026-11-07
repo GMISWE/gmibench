@@ -47,6 +47,7 @@ class RunSettings:
     circuit_breaker_errors: int = 8
     dry_run: bool = False
     manifest_id: str | None = None
+    rerun: bool = False
 
     @classmethod
     def from_config(cls, cfg: dict[str, Any], *more: dict[str, Any], **overrides: Any) -> "RunSettings":
@@ -449,13 +450,17 @@ def is_current(rec: dict[str, Any] | None, task: dict[str, Any]) -> bool:
 
 
 def pending_jobs(tasks: list[dict[str, Any]], done: dict[tuple[str, int], dict[str, Any]], runs: int,
-                 retry_errors: bool) -> list[tuple[dict[str, Any], int]]:
-    """(task, run) pairs that still need to run: missing, made with an older task, or (opt-in) API errors."""
+                 retry_errors: bool, rerun: bool = False) -> list[tuple[dict[str, Any], int]]:
+    """(task, run) pairs that still need to run: missing, made with an older task, or (opt-in) API errors.
+
+    `rerun` re-measures everything (a new time window); the new record supersedes the old one,
+    which stays in the file for audit.
+    """
     jobs = []
     for run in range(runs):
         for t in tasks:
             prev = done.get((t["id"], run))
-            if not is_current(prev, t) or (retry_errors and prev.get("error")):
+            if rerun or not is_current(prev, t) or (retry_errors and prev.get("error")):
                 jobs.append((t, run))
     return jobs
 
@@ -489,7 +494,7 @@ def run_model(client: Any, model: ModelSpec, model_id: str, suites: list[Suite],
             continue
         tasks = suite.load_tasks()
         done = store.load(model, ts)
-        jobs = pending_jobs(tasks, done, settings.runs_per_task, settings.retry_errors)
+        jobs = pending_jobs(tasks, done, settings.runs_per_task, settings.retry_errors, settings.rerun)
         total = len(tasks) * settings.runs_per_task
         counts["skipped"] += total - len(jobs)
         if not jobs:

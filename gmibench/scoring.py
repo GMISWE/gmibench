@@ -19,10 +19,11 @@ from typing import Any, Iterable
 from .checkers import strip_thinking
 from .config import ModelSpec
 
-TIER_RECOMMENDED = "GMI Recommended"
-TIER_PRODUCTION = "GMI Production Ready"
-TIER_VERIFIED = "GMI Verified"
-TIER_NONE = "Not verified"
+# Neutral tier names: they describe what a model met, not an endorsement.
+TIER_RECOMMENDED = "Best value in class"
+TIER_PRODUCTION = "Meets production bar"
+TIER_VERIFIED = "Completed"
+TIER_NONE = "Not rated"
 
 
 # --------------------------------------------------------------------------- loading
@@ -225,6 +226,7 @@ def score_model(model: ModelSpec, raw: dict[str, list[dict[str, Any]]], tasks_pe
                 if sets[n].get("tool_call_accuracy") is not None]
         stress["tool_call_accuracy"] = statistics.mean(accs) if accs else None
         stress["completed_all"] = all(sets[s]["status"] in ("ok", "n/a") for s in stress_names)
+        stress["status"] = "ok" if stress["completed_all"] else "incomplete"
     best_for = (max(ran, key=lambda k: (ran[k]["pass_rate"], -(ran[k]["cost_per_success"] or 1e9)))
                 if ran and any(v["pass_rate"] > 0 for v in ran.values()) else None)
 
@@ -276,6 +278,7 @@ def assign_tiers(cards: list[dict[str, Any]], thresholds: dict[str, Any]) -> lis
     for c in cards:
         c["tier"], c["tier_unmet"] = base_tier(c, thresholds)
         c["recommended_for"] = []
+        c["uncontested_for"] = []
     prod = [c for c in cards if c["tier"] == TIER_PRODUCTION]
     all_sets = {ts for c in cards for ts in c["sets"]}
     for ts in sorted(n for n, r in roles_of(thresholds, all_sets).items() if r == "core"):
@@ -287,6 +290,8 @@ def assign_tiers(cards: list[dict[str, Any]], thresholds: dict[str, Any]) -> lis
         for size, members in groups.items():
             best = min(members, key=lambda c: c["sets"][ts]["cost_per_success"])
             best["recommended_for"].append(ts)
+            if len(members) == 1:
+                best["uncontested_for"].append(ts)  # no other model of its size class met the bar here
     for c in prod:
         if c["recommended_for"]:
             c["tier"] = TIER_RECOMMENDED
@@ -304,10 +309,57 @@ def score_all(models: list[ModelSpec], results_dir: Path, suites: list[Any], run
     tasks_by_suite = {s.name: s.load_tasks() for s in suites}
     tasks_per_set = {n: len(t) for n, t in tasks_by_suite.items()}
     cards = []
+    scored: list[ModelSpec] = []
     for m in models:
         raw = load_raw(results_dir, m, tasks_by_suite)
         if not raw:
             continue
         na = [s.name for s in suites if not m.applies_to(s)]
-        cards.append(score_model(m, raw, tasks_per_set, runs_per_task, rules, na))
+        card = score_model(m, raw, tasks_per_set, runs_per_task, rules, na)
+        card["platform"] = platform_notes(results_dir, m, tasks_by_suite, raw)
+        cards.append(card)
+        scored.append(m)
+    # A like-for-like pass rate: only the core suites that every scored model runs.
+    roles = roles_of(rules, tasks_per_set)
+    common = [s.name for s in suites if roles[s.name] == "core" and all(m.applies_to(s) for m in scored)]
+    for c in cards:
+        core = [n for n, r in roles.items() if r == "core"]
+        c["overall"]["core_suites_run"] = sum(c["sets"][n]["status"] not in ("n/a", "not run") for n in core)
+        c["overall"]["core_suites_total"] = len(core)
+        runs = sum(c["sets"][n].get("runs", 0) for n in common)
+        passed = sum(c["sets"][n].get("passed_runs", 0) for n in common)
+        c["overall"]["common_pass_rate"] = 100.0 * passed / runs if runs else None
+        c["overall"]["common_suites"] = common
     return assign_tiers(cards, rules)
+
+
+def platform_notes(results_dir: Path, model: ModelSpec, tasks_by_suite: dict[str, list[dict[str, Any]]],
+                   raw: dict[str, list[dict[str, Any]]]) -> dict[str, int]:
+    """Serving-side events that are not the model's answer quality, for disclosure.
+
+    - retried_api_errors: attempts (for the current tasks) that ended in an API error and
+      were run again; they are not in the published error rate, which uses final attempts.
+    - non_streamed_runs: runs that had to fall back to a non-streamed call (no TTFT).
+    - raw_tool_call_text: final answers that contain unparsed tool-call template text.
+    """
+    retried = 0
+    for ts, tasks in tasks_by_suite.items():
+        p = results_dir / "raw" / model.slug / f"{ts}.jsonl"
+        if not p.exists():
+            continue
+        hashes = {t["id"]: t.get("hash") for t in tasks}
+        for line in p.read_text().splitlines():
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if rec.get("error") and rec.get("task_hash") == hashes.get(rec.get("task_id")):
+                retried += 1
+    final = [r for recs in raw.values() for r in recs]
+    retried -= sum(bool(r.get("error")) for r in final)  # final errors are already in the error rate
+    return {
+        "retried_api_errors": max(0, retried),
+        "non_streamed_runs": sum(r.get("streamed") is False for r in final),
+        "raw_tool_call_text": sum("<|tool_call>" in (r.get("response") or "") or "<tool_call>" in (r.get("response") or "")
+                                  for r in final),
+    }

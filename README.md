@@ -20,22 +20,32 @@ five dimensions: capability, efficiency, agent reliability, unit economics and d
 Every score is tied to a released **standard** (now **v1.0**), so a published result always
 means the same tasks and the same rules, and anyone can reproduce it.
 
+> **Scope and disclaimer.** These results describe the listed models **as served on GMI Cloud**
+> on 2026-11-05/06 (Pacific time), measured from one client location, on a small task set
+> written for this benchmark. They are not a statement about the models in general or on other
+> providers, not an endorsement by or of any model developer, and not a GMI certification.
+> "Best value in class" ranks cost at GMI's own list prices, which GMI sets. Model names are
+> trademarks of their owners. The Apache-2.0 license covers the code; it does not grant use of
+> the GMI name. See [Limits](#limits) before quoting a number.
+
 ## Results (Standard v1.0)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="results/charts/leaderboard_dark.png">
-  <img alt="Core vs stress pass rate per model under Standard v1.0. Gemma 4 26B 100 / 90.8, Qwen3.5-122B 99.4 / 90.6, Qwen3.6-35B 97.2 / 95.6, GLM-5.3-Flash 96.7 / 89.4, MiniMax-M2.5 95.8 / 80.0, DeepSeek V4 Flash 90.8 / 81.7, Qwen3.5-27B 87.8 / 80.6." src="results/charts/leaderboard_light.png" width="100%">
+  <img alt="Core vs stress pass rate per model under Standard v1.0. The values are in the table below." src="results/charts/leaderboard_light.png" width="100%">
 </picture>
 
-| Model | Size | Tier | Core pass | Stress pass | Cost per success |
-|---|---|---|---|---|---|
-| Gemma 4 26B A4B | small | **GMI Recommended** | 100.0% | 90.8% | $0.00013 |
-| Qwen3.6 35B A3B | small | **GMI Recommended** | 97.2% | 95.6% | $0.00740 |
-| Qwen3.5 122B A10B | mid | **GMI Recommended** | 99.4% | 90.6% | $0.00825 |
-| GLM-5.3-Flash | large | **GMI Recommended** | 96.7% | 89.4% | $0.00089 |
-| MiniMax-M2.5 | large | GMI Production Ready | 95.8% | 80.0% | $0.00184 |
-| DeepSeek V4 Flash | large | GMI Verified | 90.8% | 81.7% | $0.00078 |
-| Qwen3.5 27B | small | GMI Verified | 87.8% | 80.6% | $0.00502 |
+<!-- results-table:start -->
+| Model | Size | Tier | Core suites | Core pass | Like-for-like pass | Stress pass | Cost / success | Truncated runs |
+|---|---|---|---|---|---|---|---|---|
+| qwen3.5-122b-a10b | mid | Best value in class (uncontested) | 3/3 | 99.4% | 99.2% | 90.6% | $0.00825 | 0 |
+| gemma-4-26b-a4b | small | Best value in class | 2/3 | 99.2% | 99.2% | 90.8% | $0.00013 | 0 |
+| qwen3.6-35b-a3b | small | Best value in class (uncontested) | 3/3 | 98.9% | 98.3% | 95.6% | $0.00585 | 1 |
+| deepseek-v4-flash | large | Best value in class | 2/3 | 97.5% | 97.5% | 81.7% | $0.00041 | 24 |
+| glm-5.3-flash | large | Best value in class | 3/3 | 97.2% | 95.8% | 89.4% | $0.00085 | 14 |
+| minimax-m2.5 | large | Meets production bar | 2/3 | 95.8% | 95.8% | 80.0% | $0.00184 | 16 |
+| qwen3.5-27b | small | Completed | 3/3 | 87.8% | 89.2% | 80.6% | $0.00502 | 0 |
+<!-- results-table:end -->
 
 Core suites set the tier; stress suites are a separate score. Full tables:
 [`results/summary.md`](results/summary.md) · per-model scorecards: `results/scorecard_*.md` ·
@@ -112,7 +122,7 @@ do, and asks for confirmation.
 A crashed or stopped run resumes: raw results are appended to
 `results/raw/{model}/{suite}.jsonl` one line per run, and completed `(task, run)` pairs are
 skipped next time. Note: a smoke test with `--runs 1` leaves the suites incomplete, so `score`
-will mark those models "Not verified" until all 3 runs are recorded (or use `score --runs 1`).
+will mark those models "Not rated" until all 3 runs are recorded (or use `score --runs 1`).
 
 ## Repository layout
 
@@ -203,11 +213,9 @@ discount.
 only counts as vision-capable if GMI's endpoint accepts an image for it and the answer
 uses the image (MiniMax-M2.5 accepts the image but ignores it, so it is `false`).
 
-The cohort is 7 models. NVIDIA Nemotron 3.5 Super-VL, Nemotron 3.5 Lightning and
-gpt-oss-120b were planned but their GMI endpoints failed every request from 2026-11-05 to at
-least 2026-11-06 22:09 PST, so they were removed. Their failed runs are kept in
-`results/archive/down_models/`. To add them back when they work, restore their entries in
-`models.yaml` (see git history) and run `python bench.py run --models <name> --suites all`.
+The cohort is 7 models. Three more were planned (NVIDIA Nemotron 3.5 Super-VL, Nemotron 3.5
+Lightning and gpt-oss-120b) but were not available on GMI during the test window, so they were
+not evaluated.
 
 ---
 
@@ -308,41 +316,73 @@ sets (a run is one task attempt).
    the set) / number of passed runs, using the per-1M-token prices in `models.yaml`.
    Reasoning tokens are billed as output and are included.
 5. **Deployability** checklist, pass/fail per item:
-   - license is OSI-approved or OpenMDW;
+   - license id is on our allowlist (OSI-approved ids or OpenMDW; others are not judged, just not listed);
    - served context length ≥ 128k tokens (128,000);
    - served precision is documented;
    - weights are downloadable.
 
 ### Tiers
 
-- **GMI Verified**: completed every applicable task set (all tasks × 3 runs recorded) with
-  an error rate under 2%.
-- **GMI Production Ready**: Verified, plus pass rate ≥ 70, consistency ≥ 80, and median
-  time to first token ≤ 1.5 s.
-- **GMI Recommended**: Production Ready, plus the lowest cost per successful task in a
-  workload (task set) among Production Ready models of the same size class. Size classes
-  use total parameters: small ≤ 40B, mid ≤ 150B, large above that. A model can be
-  recommended for more than one workload.
+Tier names describe which bars a model met. They are not endorsements.
 
-Each scorecard also has a "best for" line: the task set with the highest pass rate (ties go
-to the lower cost per successful task).
+- **Completed**: finished every applicable core suite (all tasks × 3 runs recorded) with an
+  error rate under 2%.
+- **Meets production bar**: Completed, plus pass rate ≥ 70, consistency ≥ 80, and median
+  time to first token ≤ 1.5 s.
+- **Best value in class**: meets the production bar, plus the lowest cost per successful task
+  on a core suite among models of the same size class that also meet the bar. Cost uses GMI
+  list prices (which GMI sets) without cache or account discounts. When no other model of
+  the size class met the bar on that suite, the scorecard marks the win **uncontested**.
+  Size classes use total parameters: small ≤ 40B, mid ≤ 150B, large above that.
+- **Not rated**: did not complete the core suites.
+
+Each scorecard also has a "best for" line (the core suite with the highest pass rate) and a
+"Platform notes" section that lists serving-side events (retried API errors, non-streamed
+fallbacks, unparsed tool-call text, runs cut off at the token limit), so they are not
+mistaken for model quality.
 
 ### Outputs
 
 - `results/scorecard_{model}.md`: the five dimensions, the tier, unmet criteria, best-for.
 - `results/summary.md`, `results/summary.csv`: cohort tables, sorted by cost per
   successful task within each workload.
-- `results/charts/`: pass rate vs cost per successful task, TTFT by model, consistency by
-  model.
-- `results/raw/`: every run, for audit.
+- `results/charts/`: core vs stress pass rate (README chart), pass rate vs cost per successful
+  task, TTFT by model, consistency by model.
+- `results/raw/`: every run, for audit (append-only; superseded runs stay in the file).
+- `results/manifests/`: what produced each run (git commit, standard, suite versions, prices).
 
 ### Limits
 
-- The tasks are small and synthetic. They measure whether a model is dependable on common
-  production patterns, not its frontier capability.
-- Latency depends on GMI load at run time. Report the run date with the results.
-- Model-generated code is run on the local machine (in a temporary folder, with a timeout).
+Read these before quoting a number.
+
+- **Small sample.** 20 tasks per suite, 3 runs each at temperature 0 with a fixed seed, so the
+  runs are close to repeats: treat it as about 20 independent items per suite. One task is
+  about 1.7 points of a 60-run suite. Gaps under about 5 points are not meaningful.
+- **Synthetic, public tasks.** The tasks were written for this benchmark and many are
+  well-known problem types. The tests and reference answers are in this repository, so a
+  model trained on it later could score higher without being better.
+- **Unequal coverage.** Models without vision on GMI skip the documents suite. Compare them
+  with the "Like-for-like pass" column in `results/summary.md`, not the core pass rate.
+- **One place, one window.** Latency was measured from one client location (San Jose) over
+  about one day. Time to first token depends on GMI load at that time. Four models' core
+  suites were re-measured on 2026-11-06 (Pacific) because their first runs overlapped a GMI
+  service incident; the earlier runs stay in `results/raw/` for audit.
+- **Serving effects.** Results include GMI's serving stack (parsers, routing, limits). The
+  scorecards list serving-side events under "Platform notes".
+- **Token limits.** Reasoning models that run out of output tokens (16,384 for core coding,
+  32,768 for hard coding) fail the task. The "Truncated runs" column shows how often.
+- **Prices.** Costs use GMI list prices at run time, without cache-read pricing or account
+  discounts. Real bills can be lower.
+- **History.** The v1.0 results were recorded just before run manifests existed; their task
+  fingerprints were stamped afterwards from identical task files (manifest `legacy-pre-v1.0`).
+  Re-measured runs carry their own manifests.
+- Model-generated code runs on the local machine (in a temporary folder, with a timeout).
   Run the benchmark in a container or VM if that matters to you.
+
+## Contact
+
+Questions, corrections, or a model developer who wants to dispute a result: open an issue in
+this repository. Please include the model name, suite and task ID.
 
 ## License
 

@@ -15,8 +15,8 @@ models:
     id: google/gemma-4-26b-a4b-it
     focus: general, tool use
     lab: Google
-    total_params_b: 25.8
-    active_params_b: 4
+    total_params_b: 25.8   # safetensors total (the model card says 25.2B)
+    active_params_b: 3.8   # model card
     license: apache-2.0
     context_length: 256000
     precision: FP8
@@ -29,8 +29,8 @@ models:
     id: zai-org/GLM-5.3-Flash
     focus: coding agent
     lab: Zhipu AI (Z.ai)
-    total_params_b: 321.3
-    active_params_b: null
+    total_params_b: 321.3  # safetensors total (the model card says 320B)
+    active_params_b: 18    # model card
     license: mit
     context_length: 1048576
     precision: FP8
@@ -43,8 +43,8 @@ models:
     id: deepseek-ai/DeepSeek-V4-Flash
     focus: coding, reasoning
     lab: DeepSeek
-    total_params_b: 290.9
-    active_params_b: null
+    total_params_b: 290.9  # safetensors total (the model card says 284B)
+    active_params_b: 13    # model card
     license: mit
     context_length: 1048575
     precision: FP8
@@ -67,10 +67,8 @@ models:
     vision: true  # image input accepted on GMI (probe 2026-11-05)
     weights_url: https://huggingface.co/Qwen/Qwen3.6-35B-A3B
 
-  # --- Added 2026-11-06. NVIDIA Nemotron 3.5 Super-VL, Nemotron 3.5 Lightning and
-  # gpt-oss-120b were in the first cohort but were down on GMI from 2026-11-05 22:54 PST to at
-  # least 2026-11-06 22:09 PST (523 / 429 / 503), so they were removed. Their failed runs are in
-  # results/archive/down_models/. See reports/gmi-incident-2026-11-05.md.
+  # Three planned models (NVIDIA Nemotron 3.5 Super-VL, Nemotron 3.5 Lightning, gpt-oss-120b)
+  # were not available on GMI during the test window and were not evaluated.
 
   - name: qwen3.5-122b-a10b
     id: Qwen/Qwen3.5-122B-A10B
@@ -105,11 +103,11 @@ models:
     focus: coding, reasoning
     lab: MiniMax
     total_params_b: 228.7
-    active_params_b: 10  # model card: 230B total, 10B active
-    license: modified-mit  # MIT plus an attribution clause; not an OSI license id
+    active_params_b: 10  # same architecture as MiniMax-M2 (230B total, 10B active); not stated in the M2.5 card
+    license: modified-mit  # Hugging Face tag "other" / "modified-mit"; not on our allowlist of license ids
     context_length: 196608
     precision: FP8
     input_price_per_m: 0.30
     output_price_per_m: 1.20
-    vision: false  # GMI accepts image input but the model ignores it (probe 2026-11-06)
+    vision: false  # image input did not work on GMI's endpoint in our probe (2026-11-06)
     weights_url: https://huggingface.co/MiniMaxAI/MiniMax-M2.5

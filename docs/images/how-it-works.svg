@@ -60,9 +60,9 @@
 
   <rect class="card" x="980" y="150" width="200" height="120" rx="12"/>
   <text class="ink h" x="1000" y="184">Scorecards</text>
-  <text class="ink2 s" x="1000" y="210">Verified</text>
-  <text class="ink2 s" x="1000" y="232">→ Production Ready</text>
-  <text class="ink2 s" x="1000" y="252">→ Recommended</text>
+  <text class="ink2 s" x="1000" y="210">Completed</text>
+  <text class="ink2 s" x="1000" y="232">→ Meets production bar</text>
+  <text class="ink2 s" x="1000" y="252">→ Best value in class</text>
 
   <!-- Standard -->
   <rect class="card-orange" x="740" y="330" width="200" height="104" rx="12"/>

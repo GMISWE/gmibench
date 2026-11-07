@@ -69,8 +69,11 @@ def scorecard_md(card: dict[str, Any], thresholds: dict[str, Any]) -> str:
         "",
     ]
     if card.get("recommended_for"):
-        lines.append("Recommended for: " + ", ".join(label(s) for s in card["recommended_for"])
-                     + f" ({card['size_class']} models).")
+        parts = [label(s) + (" (uncontested: no other " + card["size_class"] + " model met the bar here)"
+                             if s in card.get("uncontested_for", []) else "")
+                 for s in card["recommended_for"]]
+        lines.append(f"Lowest cost per successful task among {card['size_class']} models that meet the "
+                     "production bar, at GMI list prices, for: " + "; ".join(parts) + ".")
     if card.get("tier_unmet"):
         lines.append("Not met for the next tier:")
         lines += [f"- {u}" for u in card["tier_unmet"]]
@@ -99,9 +102,10 @@ def scorecard_md(card: dict[str, Any], thresholds: dict[str, Any]) -> str:
     lines += [
         "## 2. Efficiency", "",
         f"- Median output speed: {_f(o.get('tps_median'))} tokens/s",
-        f"- Median time to first token: {_f(o.get('ttft_median_s'), '{:.2f}')} s",
-        *([f"- Note: {o['non_streamed_runs']} runs could not stream (the endpoint returned an empty stream "
-           "with tools), so they ran without streaming and have no TTFT or speed measurement."]
+        f"- Median time to first token: {_f(o.get('ttft_median_s'), '{:.2f}')} s "
+        "(one client location, San Jose; see the README limits)",
+        *([f"- Note: {o['non_streamed_runs']} core runs did not stream, so they have no TTFT or speed "
+           "measurement; the median uses the other runs."]
           if o.get("non_streamed_runs") else []),
         f"- Quality per active parameter: {_f(o.get('quality_per_active_b'), '{:.2f}')} pass-rate points per "
         f"active B (active params: {_f(card.get('active_params_b'), '{:g}B', 'unknown')})",
@@ -115,9 +119,19 @@ def scorecard_md(card: dict[str, Any], thresholds: dict[str, Any]) -> str:
         f"- Empty answers (finished, but no visible text; e.g. the answer went to the reasoning channel): "
         f"{o.get('empty_answer_runs', 0)}",
         "",
+        "### Platform notes", "",
+        "Serving-side events, shown so they are not mistaken for model quality (all suites):", "",
+        f"- API errors that were retried and then succeeded: {(card.get('platform') or {}).get('retried_api_errors', 0)}"
+        " (not in the error rate above, which counts final attempts)",
+        f"- Runs that fell back to a non-streamed call: {(card.get('platform') or {}).get('non_streamed_runs', 0)}",
+        f"- Answers with unparsed tool-call text: {(card.get('platform') or {}).get('raw_tool_call_text', 0)}",
+        f"- Runs cut off at the output-token limit (counted as failures): "
+        f"{o.get('truncated_runs', 0) + (card.get('stress') or {}).get('truncated_runs', 0)}",
+        "",
         "## 4. Unit economics", "",
         f"Prices: ${_f(card.get('input_price_per_m'), '{:g}', '?')} in / "
-        f"${_f(card.get('output_price_per_m'), '{:g}', '?')} out per 1M tokens.", "",
+        f"${_f(card.get('output_price_per_m'), '{:g}', '?')} out per 1M tokens (GMI list prices at run time; "
+        "no cache or account discounts).", "",
         "| Task set | Prompt tokens | Completion tokens | Cost | Cost per successful task |", "|---|---|---|---|---|",
     ]
     for ts, s in card["sets"].items():
@@ -129,7 +143,7 @@ def scorecard_md(card: dict[str, Any], thresholds: dict[str, Any]) -> str:
               f"{_usd(o.get('cost_usd'))} | **{_usd(o.get('cost_per_success'))}** |", ""]
 
     labels = {
-        "license_osi_or_openmdw": f"License is OSI-approved or OpenMDW ({card.get('license') or 'unknown'})",
+        "license_osi_or_openmdw": f"License id on our allowlist: OSI-approved or OpenMDW ({card.get('license') or 'unknown'})",
         "context_ge_128k": f"Served context ≥ 128k ({_f(card.get('context_length'), '{:,}', 'unknown')} tokens)",
         "precision_documented": f"Served precision documented ({card.get('precision') or 'unknown'})",
         "weights_downloadable": "Weights downloadable",
@@ -158,19 +172,25 @@ def summary_md(cards: list[dict[str, Any]], dry_run: bool) -> str:
         lines += [f"Scored under **{STANDARD_LABEL}**.", ""]
     if dry_run:
         lines += ["> **DRY RUN.** These numbers come from the fake client, not from real models.", ""]
+    common = next((c["overall"].get("common_suites") for c in cards if c["overall"].get("common_suites")), [])
     lines += ["## Overall (sorted by cost per successful task)", "",
-              "| Model | Tier | Size | Pass rate | Hard pass rate | Consistency | TTFT median | Tokens/s | "
-              "Cost / success | Deployability | Best for |",
-              "|---|---|---|---|---|---|---|---|---|---|---|"]
+              "| Model | Tier | Size | Core suites | Core pass | Like-for-like pass | Stress pass | Consistency | "
+              "TTFT median | Tokens/s | Cost / success | Truncated runs | Deployability |",
+              "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for c in _sort_cost(cards, None):
         o = c["overall"]
-        hard = (c.get("stress") or {}).get("pass_rate")
-        lines.append(f"| {c['name']} | {c['tier']} | {c['size_class']} | {_f(o.get('pass_rate'))}% | "
-                     f"{_f(hard)}{'%' if hard is not None else ''} | {_f(o.get('consistency'))}% | {_f(o.get('ttft_median_s'), '{:.2f}')} s | "
-                     f"{_f(o.get('tps_median'))} | {_usd(o.get('cost_per_success'))} | {_deploy_count(c)} | "
-                     f"{label(c['best_for']) if c.get('best_for') else '–'} |")
-    lines += ["", "Pass rate, consistency, TTFT and cost use the core suites (these set the tier). "
-              "Hard pass rate is the separate stress score over the stress suites."]
+        st = c.get("stress") or {}
+        hard = st.get("pass_rate")
+        trunc = (o.get("truncated_runs") or 0) + (st.get("truncated_runs") or 0)
+        lines.append(f"| {c['name']} | {c['tier']} | {c['size_class']} | "
+                     f"{o.get('core_suites_run', '?')}/{o.get('core_suites_total', '?')} | {_f(o.get('pass_rate'))}% | "
+                     f"{_f(o.get('common_pass_rate'))}% | {_f(hard)}{'%' if hard is not None else ''} | "
+                     f"{_f(o.get('consistency'))}% | {_f(o.get('ttft_median_s'), '{:.2f}')} s | "
+                     f"{_f(o.get('tps_median'))} | {_usd(o.get('cost_per_success'))} | {trunc} | {_deploy_count(c)} |")
+    lines += ["", "Core pass, consistency, TTFT and cost use the core suites (these set the tier). Models without "
+              "vision skip the documents suite, so **Like-for-like pass** uses only the core suites every model ran ("
+              + ", ".join(label(n) for n in common) + "). Stress pass is a separate score. Truncated runs hit the "
+              "output-token limit and count as failures. Cost uses GMI list prices without cache or account discounts."]
     for ts in set_names(cards):
         rows = [c for c in cards if c["sets"].get(ts, {}).get("status") not in (None, "n/a", "not run")]
         if not rows:
@@ -338,7 +358,7 @@ def write_leaderboard(cards: list[dict[str, Any]], out_dir: Path) -> list[Path]:
         return paths
     lows = [v for c in ran for v in (c["overall"]["pass_rate"], (c.get("stress") or {}).get("pass_rate"))
             if v is not None]
-    x_min = max(0, min(50, int(min(lows) // 10 * 10) - 10))
+    x_min = 0  # full scale: a truncated axis exaggerates small gaps
     for mode, t in _THEMES.items():
         fig, ax = plt.subplots(figsize=(10, 0.55 * len(ran) + 1.9), dpi=160)
         fig.patch.set_facecolor(t["surface"])
@@ -384,6 +404,38 @@ def write_leaderboard(cards: list[dict[str, Any]], out_dir: Path) -> list[Path]:
         plt.close(fig)
         paths.append(p)
     return paths
+
+
+def readme_table(cards: list[dict[str, Any]]) -> str:
+    """The results table shown in the README (between the results-table markers)."""
+    order = {"Best value in class": 0, "Meets production bar": 1, "Completed": 2, "Not rated": 3}
+    rows = sorted(cards, key=lambda c: (order.get(c["tier"], 9), -(c["overall"].get("pass_rate") or 0)))
+    lines = ["| Model | Size | Tier | Core suites | Core pass | Like-for-like pass | Stress pass | "
+             "Cost / success | Truncated runs |", "|---|---|---|---|---|---|---|---|---|"]
+    for c in rows:
+        o, st = c["overall"], c.get("stress") or {}
+        tier = c["tier"] + (" (uncontested)" if c.get("recommended_for") and
+                            set(c["recommended_for"]) <= set(c.get("uncontested_for", [])) else "")
+        trunc = (o.get("truncated_runs") or 0) + (st.get("truncated_runs") or 0)
+        lines.append(f"| {c['name']} | {c['size_class']} | {tier} | {o.get('core_suites_run', '?')}/"
+                     f"{o.get('core_suites_total', '?')} | {_f(o.get('pass_rate'))}% | {_f(o.get('common_pass_rate'))}% | "
+                     f"{_f(st.get('pass_rate'))}% | {_usd(o.get('cost_per_success'))} | {trunc} |")
+    return "\n".join(lines)
+
+
+def update_readme(readme: Path, cards: list[dict[str, Any]]) -> bool:
+    """Replace the README results table between its markers. Returns True if the file changed."""
+    start, end = "<!-- results-table:start -->", "<!-- results-table:end -->"
+    if not readme.exists():
+        return False
+    text = readme.read_text()
+    if start not in text or end not in text:
+        return False
+    a, b = text.index(start) + len(start), text.index(end)
+    new = text[:a] + "\n" + readme_table(cards) + "\n" + text[b:]
+    if new != text:
+        readme.write_text(new)
+    return new != text
 
 
 def write_reports(cards: list[dict[str, Any]], results_dir: Path, thresholds: dict[str, Any],

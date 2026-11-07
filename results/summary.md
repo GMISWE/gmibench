@@ -4,28 +4,28 @@ Scored under **GMI Open Model Standard v1.0**.
 
 ## Overall (sorted by cost per successful task)
 
-| Model | Tier | Size | Pass rate | Hard pass rate | Consistency | TTFT median | Tokens/s | Cost / success | Deployability | Best for |
-|---|---|---|---|---|---|---|---|---|---|---|
-| gemma-4-26b-a4b | GMI Recommended | small | 100.0% | 90.8% | 100.0% | 0.52 s | 95.4 | $0.00013 | 4/4 | Coding |
-| deepseek-v4-flash | GMI Verified | large | 90.8% | 81.7% | 85.0% | 1.69 s | 203.7 | $0.00078 | 4/4 | Tool use |
-| glm-5.3-flash | GMI Recommended | large | 96.7% | 89.4% | 93.3% | 0.64 s | 105.2 | $0.00089 | 4/4 | Tool use |
-| minimax-m2.5 | GMI Production Ready | large | 95.8% | 80.0% | 90.0% | 0.93 s | 73.0 | $0.00184 | 3/4 | Tool use |
-| qwen3.5-27b | GMI Verified | small | 87.8% | 80.6% | 76.7% | 1.95 s | 58.2 | $0.00502 | 4/4 | Tool use |
-| qwen3.6-35b-a3b | GMI Recommended | small | 97.2% | 95.6% | 93.3% | 0.90 s | 136.1 | $0.00740 | 4/4 | Tool use |
-| qwen3.5-122b-a10b | GMI Recommended | mid | 99.4% | 90.6% | 98.3% | 1.09 s | 159.7 | $0.00825 | 4/4 | Documents |
+| Model | Tier | Size | Core suites | Core pass | Like-for-like pass | Stress pass | Consistency | TTFT median | Tokens/s | Cost / success | Truncated runs | Deployability |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| gemma-4-26b-a4b | Best value in class | small | 2/3 | 99.2% | 99.2% | 90.8% | 97.5% | 0.53 s | 202.6 | $0.00013 | 0 | 4/4 |
+| deepseek-v4-flash | Best value in class | large | 2/3 | 97.5% | 97.5% | 81.7% | 95.0% | 0.49 s | 402.1 | $0.00041 | 24 | 4/4 |
+| glm-5.3-flash | Best value in class | large | 3/3 | 97.2% | 95.8% | 89.4% | 95.0% | 0.60 s | 95.1 | $0.00085 | 14 | 4/4 |
+| minimax-m2.5 | Meets production bar | large | 2/3 | 95.8% | 95.8% | 80.0% | 90.0% | 0.93 s | 73.0 | $0.00184 | 16 | 3/4 |
+| qwen3.5-27b | Completed | small | 3/3 | 87.8% | 89.2% | 80.6% | 76.7% | 1.95 s | 58.2 | $0.00502 | 0 | 4/4 |
+| qwen3.6-35b-a3b | Best value in class | small | 3/3 | 98.9% | 98.3% | 95.6% | 96.7% | 0.99 s | 130.9 | $0.00585 | 1 | 4/4 |
+| qwen3.5-122b-a10b | Best value in class | mid | 3/3 | 99.4% | 99.2% | 90.6% | 98.3% | 1.09 s | 159.7 | $0.00825 | 0 | 4/4 |
 
-Pass rate, consistency, TTFT and cost use the core suites (these set the tier). Hard pass rate is the separate stress score over the stress suites.
+Core pass, consistency, TTFT and cost use the core suites (these set the tier). Models without vision skip the documents suite, so **Like-for-like pass** uses only the core suites every model ran (Coding, Tool use). Stress pass is a separate score. Truncated runs hit the output-token limit and count as failures. Cost uses GMI list prices without cache or account discounts.
 
 ## Coding (core: sets the tier; sorted by cost per successful task)
 
 | Model | Size | Status | Pass rate | Consistency | TTFT median | Cost / success | Recommended |
 |---|---|---|---|---|---|---|---|
-| gemma-4-26b-a4b | small | ok | 100.0% | 100.0% | 0.52 s | $0.00012 | yes |
-| deepseek-v4-flash | large | ok | 81.7% | 70.0% | 1.70 s | $0.00141 |  |
-| glm-5.3-flash | large | ok | 91.7% | 85.0% | 0.51 s | $0.00225 | yes |
+| gemma-4-26b-a4b | small | ok | 98.3% | 95.0% | 0.53 s | $0.00012 | yes |
+| deepseek-v4-flash | large | ok | 96.7% | 95.0% | 0.49 s | $0.00057 | yes |
+| glm-5.3-flash | large | ok | 91.7% | 85.0% | 0.51 s | $0.00210 |  |
 | minimax-m2.5 | large | ok | 91.7% | 80.0% | 0.97 s | $0.00327 |  |
 | qwen3.5-27b | small | ok | 80.0% | 65.0% | 1.89 s | $0.0145 |  |
-| qwen3.6-35b-a3b | small | ok | 91.7% | 80.0% | 0.83 s | $0.0218 |  |
+| qwen3.6-35b-a3b | small | ok | 96.7% | 90.0% | 0.86 s | $0.0163 |  |
 | qwen3.5-122b-a10b | mid | ok | 98.3% | 95.0% | 0.98 s | $0.0229 | yes |
 
 ## Tool use (core: sets the tier; sorted by cost per successful task)
@@ -33,10 +33,10 @@ Pass rate, consistency, TTFT and cost use the core suites (these set the tier). 
 | Model | Size | Status | Pass rate | Consistency | TTFT median | Cost / success | Recommended |
 |---|---|---|---|---|---|---|---|
 | gemma-4-26b-a4b | small | ok | 100.0% | 100.0% | – s | $0.00014 | yes |
-| glm-5.3-flash | large | ok | 100.0% | 100.0% | 0.57 s | $0.00021 | yes |
-| deepseek-v4-flash | large | ok | 100.0% | 100.0% | 1.66 s | $0.00026 |  |
+| glm-5.3-flash | large | ok | 100.0% | 100.0% | 0.58 s | $0.00022 | yes |
+| deepseek-v4-flash | large | ok | 98.3% | 95.0% | 0.48 s | $0.00025 |  |
 | minimax-m2.5 | large | ok | 100.0% | 100.0% | 0.93 s | $0.00052 |  |
-| qwen3.6-35b-a3b | small | ok | 100.0% | 100.0% | 0.74 s | $0.00079 |  |
+| qwen3.6-35b-a3b | small | ok | 100.0% | 100.0% | 0.76 s | $0.00076 |  |
 | qwen3.5-27b | small | ok | 98.3% | 95.0% | 2.03 s | $0.00092 |  |
 | qwen3.5-122b-a10b | mid | ok | 100.0% | 100.0% | 0.92 s | $0.00112 | yes |
 
@@ -44,8 +44,8 @@ Pass rate, consistency, TTFT and cost use the core suites (these set the tier). 
 
 | Model | Size | Status | Pass rate | Consistency | TTFT median | Cost / success | Recommended |
 |---|---|---|---|---|---|---|---|
-| glm-5.3-flash | large | ok | 98.3% | 95.0% | 0.88 s | $0.00030 | yes |
-| qwen3.6-35b-a3b | small | ok | 100.0% | 100.0% | 2.90 s | $0.00081 | yes |
+| glm-5.3-flash | large | ok | 100.0% | 100.0% | 1.90 s | $0.00032 | yes |
+| qwen3.6-35b-a3b | small | ok | 100.0% | 100.0% | 3.22 s | $0.00082 | yes |
 | qwen3.5-27b | small | ok | 85.0% | 70.0% | 2.20 s | $0.00089 |  |
 | qwen3.5-122b-a10b | mid | ok | 100.0% | 100.0% | 1.71 s | $0.00101 | yes |
 

@@ -4,9 +4,9 @@
 
 Scored under **GMI Open Model Standard v1.0**.
 
-## Tier: GMI Recommended
+## Tier: Best value in class
 
-Recommended for: Coding, Documents, Tool use (mid models).
+Lowest cost per successful task among mid models that meet the production bar, at GMI list prices, for: Coding (uncontested: no other mid model met the bar here); Documents (uncontested: no other mid model met the bar here); Tool use (uncontested: no other mid model met the bar here).
 
 Best for: documents (100.0% pass rate, $0.00101 per successful task).
 
@@ -28,7 +28,7 @@ The tier uses the core suites only. Stress suites are a separate score; experime
 ## 2. Efficiency
 
 - Median output speed: 159.7 tokens/s
-- Median time to first token: 1.09 s
+- Median time to first token: 1.09 s (one client location, San Jose; see the README limits)
 - Quality per active parameter: 9.94 pass-rate points per active B (active params: 10B)
 
 ## 3. Agent reliability
@@ -40,9 +40,18 @@ The tier uses the core suites only. Stress suites are a separate score; experime
 - Truncated runs (hit max_tokens before finishing): 0
 - Empty answers (finished, but no visible text; e.g. the answer went to the reasoning channel): 0
 
+### Platform notes
+
+Serving-side events, shown so they are not mistaken for model quality (all suites):
+
+- API errors that were retried and then succeeded: 0 (not in the error rate above, which counts final attempts)
+- Runs that fell back to a non-streamed call: 0
+- Answers with unparsed tool-call text: 0
+- Runs cut off at the output-token limit (counted as failures): 0
+
 ## 4. Unit economics
 
-Prices: $0.4 in / $3.2 out per 1M tokens.
+Prices: $0.4 in / $3.2 out per 1M tokens (GMI list prices at run time; no cache or account discounts).
 
 | Task set | Prompt tokens | Completion tokens | Cost | Cost per successful task |
 |---|---|---|---|---|
@@ -58,7 +67,7 @@ Prices: $0.4 in / $3.2 out per 1M tokens.
 
 | Check | Result |
 |---|---|
-| License is OSI-approved or OpenMDW (apache-2.0) | pass |
+| License id on our allowlist: OSI-approved or OpenMDW (apache-2.0) | pass |
 | Served context ≥ 128k (262,144 tokens) | pass |
 | Served precision documented (FP8) | pass |
 | Weights downloadable | pass |

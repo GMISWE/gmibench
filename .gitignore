@@ -8,5 +8,5 @@ results_dryrun/
 results/charts/.mplcache/
 results_dryrun/charts/.mplcache/
 .DS_Store
-.claude/
 results_smoke/
+private/

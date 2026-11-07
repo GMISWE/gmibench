@@ -4,7 +4,7 @@
 
 Scored under **GMI Open Model Standard v1.0**.
 
-## Tier: GMI Production Ready
+## Tier: Meets production bar
 
 Not met for the next tier:
 - not the lowest cost per successful task in any workload for its size class
@@ -29,7 +29,7 @@ The tier uses the core suites only. Stress suites are a separate score; experime
 ## 2. Efficiency
 
 - Median output speed: 73.0 tokens/s
-- Median time to first token: 0.93 s
+- Median time to first token: 0.93 s (one client location, San Jose; see the README limits)
 - Quality per active parameter: 9.58 pass-rate points per active B (active params: 10B)
 
 ## 3. Agent reliability
@@ -41,9 +41,18 @@ The tier uses the core suites only. Stress suites are a separate score; experime
 - Truncated runs (hit max_tokens before finishing): 3
 - Empty answers (finished, but no visible text; e.g. the answer went to the reasoning channel): 0
 
+### Platform notes
+
+Serving-side events, shown so they are not mistaken for model quality (all suites):
+
+- API errors that were retried and then succeeded: 0 (not in the error rate above, which counts final attempts)
+- Runs that fell back to a non-streamed call: 0
+- Answers with unparsed tool-call text: 0
+- Runs cut off at the output-token limit (counted as failures): 16
+
 ## 4. Unit economics
 
-Prices: $0.3 in / $1.2 out per 1M tokens.
+Prices: $0.3 in / $1.2 out per 1M tokens (GMI list prices at run time; no cache or account discounts).
 
 | Task set | Prompt tokens | Completion tokens | Cost | Cost per successful task |
 |---|---|---|---|---|
@@ -57,7 +66,7 @@ Prices: $0.3 in / $1.2 out per 1M tokens.
 
 | Check | Result |
 |---|---|
-| License is OSI-approved or OpenMDW (modified-mit) | fail |
+| License id on our allowlist: OSI-approved or OpenMDW (modified-mit) | fail |
 | Served context ≥ 128k (196,608 tokens) | pass |
 | Served precision documented (FP8) | pass |
 | Weights downloadable | pass |

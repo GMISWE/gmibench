@@ -8,7 +8,7 @@
       "focus": "general, tool use",
       "lab": "Google",
       "total_params_b": 25.8,
-      "active_params_b": 4,
+      "active_params_b": 3.8,
       "license": "apache-2.0",
       "context_length": 256000,
       "precision": "FP8",
@@ -21,22 +21,22 @@
           "status": "ok",
           "runs": 60,
           "expected_runs": 60,
-          "passed_runs": 60,
+          "passed_runs": 59,
           "errors": 0,
-          "pass_rate": 100.0,
+          "pass_rate": 98.33333333333333,
           "error_rate": 0.0,
-          "consistency": 100.0,
+          "consistency": 95.0,
           "tool_call_accuracy": null,
-          "mean_retries_per_task": 0.0,
-          "ttft_median_s": 0.5187040625023656,
-          "tps_median": 95.38425451719155,
+          "mean_retries_per_task": 0.2,
+          "ttft_median_s": 0.5270504164946033,
+          "tps_median": 202.56949592150693,
           "non_streamed_runs": 0,
           "truncated_runs": 0,
           "empty_answer_runs": 0,
           "prompt_tokens": 7146,
-          "completion_tokens": 15068,
-          "cost_usd": 0.00695618,
-          "cost_per_success": 0.00011593633333333333,
+          "completion_tokens": 15327,
+          "cost_usd": 0.007059780000000001,
+          "cost_per_success": 0.00011965728813559323,
           "role": "core"
         },
         "tool_use": {
@@ -49,16 +49,16 @@
           "error_rate": 0.0,
           "consistency": 100.0,
           "tool_call_accuracy": 100.0,
-          "mean_retries_per_task": 0.15,
+          "mean_retries_per_task": 0.2,
           "ttft_median_s": null,
           "tps_median": null,
           "non_streamed_runs": 60,
           "truncated_runs": 0,
           "empty_answer_runs": 0,
-          "prompt_tokens": 53073,
-          "completion_tokens": 3286,
-          "cost_usd": 0.00821389,
-          "cost_per_success": 0.00013689816666666665,
+          "prompt_tokens": 54677,
+          "completion_tokens": 3342,
+          "cost_usd": 0.00844481,
+          "cost_per_success": 0.00014074683333333335,
           "role": "core"
         },
         "documents": {
@@ -117,24 +117,31 @@
       "overall": {
         "runs": 120,
         "expected_runs": 0,
-        "passed_runs": 120,
+        "passed_runs": 119,
         "errors": 0,
-        "pass_rate": 100.0,
+        "pass_rate": 99.16666666666667,
         "error_rate": 0.0,
-        "consistency": 100.0,
-        "mean_retries_per_task": 0.075,
-        "ttft_median_s": 0.5187040625023656,
-        "tps_median": 95.38425451719155,
+        "consistency": 97.5,
+        "mean_retries_per_task": 0.2,
+        "ttft_median_s": 0.5270504164946033,
+        "tps_median": 202.56949592150693,
         "non_streamed_runs": 60,
         "truncated_runs": 0,
         "empty_answer_runs": 0,
-        "prompt_tokens": 60219,
-        "completion_tokens": 18354,
-        "cost_usd": 0.01517007,
-        "cost_per_success": 0.00012641725,
+        "prompt_tokens": 61823,
+        "completion_tokens": 18669,
+        "cost_usd": 0.01550459,
+        "cost_per_success": 0.00013029067226890756,
         "tool_call_accuracy": 100.0,
         "completed_all": true,
-        "quality_per_active_b": 25.0
+        "quality_per_active_b": 26.096491228070178,
+        "core_suites_run": 2,
+        "core_suites_total": 3,
+        "common_pass_rate": 99.16666666666667,
+        "common_suites": [
+          "coding",
+          "tool_use"
+        ]
       },
       "stress": {
         "runs": 120,
@@ -155,7 +162,8 @@
         "completion_tokens": 71504,
         "cost_usd": 0.17347204000000002,
         "cost_per_success": 0.0015914866055045873,
-        "completed_all": true
+        "completed_all": true,
+        "status": "ok"
       },
       "deployability": {
         "license_osi_or_openmdw": true,
@@ -163,13 +171,19 @@
         "precision_documented": true,
         "weights_downloadable": true
       },
-      "best_for": "coding",
-      "tier": "GMI Recommended",
+      "best_for": "tool_use",
+      "platform": {
+        "retried_api_errors": 0,
+        "non_streamed_runs": 120,
+        "raw_tool_call_text": 1
+      },
+      "tier": "Best value in class",
       "tier_unmet": [],
       "recommended_for": [
         "coding",
         "tool_use"
-      ]
+      ],
+      "uncontested_for": []
     },
     {
       "name": "glm-5.3-flash",
@@ -177,7 +191,7 @@
       "focus": "coding agent",
       "lab": "Zhipu AI (Z.ai)",
       "total_params_b": 321.3,
-      "active_params_b": null,
+      "active_params_b": 18,
       "license": "mit",
       "context_length": 1048576,
       "precision": "FP8",
@@ -197,15 +211,15 @@
           "consistency": 85.0,
           "tool_call_accuracy": null,
           "mean_retries_per_task": 0.0,
-          "ttft_median_s": 0.5107501045058598,
-          "tps_median": 106.65758295027157,
+          "ttft_median_s": 0.5063240210001823,
+          "tps_median": 102.50424833820242,
           "non_streamed_runs": 0,
           "truncated_runs": 5,
           "empty_answer_runs": 0,
           "prompt_tokens": 6723,
-          "completion_tokens": 245645,
-          "cost_usd": 0.12383095,
-          "cost_per_success": 0.002251471818181818,
+          "completion_tokens": 229319,
+          "cost_usd": 0.11566794999999999,
+          "cost_per_success": 0.0021030536363636364,
           "role": "core"
         },
         "tool_use": {
@@ -219,37 +233,37 @@
           "consistency": 100.0,
           "tool_call_accuracy": 100.0,
           "mean_retries_per_task": 0.0,
-          "ttft_median_s": 0.5697787295066519,
-          "tps_median": 110.28483939507561,
+          "ttft_median_s": 0.5809095625008922,
+          "tps_median": 75.1111169083575,
           "non_streamed_runs": 0,
           "truncated_runs": 0,
           "empty_answer_runs": 0,
-          "prompt_tokens": 60720,
-          "completion_tokens": 6793,
-          "cost_usd": 0.0125045,
-          "cost_per_success": 0.00020840833333333333,
+          "prompt_tokens": 63326,
+          "completion_tokens": 7110,
+          "cost_usd": 0.0130539,
+          "cost_per_success": 0.000217565,
           "role": "core"
         },
         "documents": {
           "status": "ok",
           "runs": 60,
           "expected_runs": 60,
-          "passed_runs": 59,
+          "passed_runs": 60,
           "errors": 0,
-          "pass_rate": 98.33333333333333,
+          "pass_rate": 100.0,
           "error_rate": 0.0,
-          "consistency": 95.0,
+          "consistency": 100.0,
           "tool_call_accuracy": null,
-          "mean_retries_per_task": 0.15,
-          "ttft_median_s": 0.8753146250019199,
-          "tps_median": 99.68644710988221,
-          "non_streamed_runs": 0,
+          "mean_retries_per_task": 0.4,
+          "ttft_median_s": 1.896761666983366,
+          "tps_median": 93.22991539774688,
+          "non_streamed_runs": 4,
           "truncated_runs": 0,
           "empty_answer_runs": 0,
           "prompt_tokens": 68421,
-          "completion_tokens": 15205,
-          "cost_usd": 0.01786565,
-          "cost_per_success": 0.00030280762711864406,
+          "completion_tokens": 18421,
+          "cost_usd": 0.01947365,
+          "cost_per_success": 0.0003245608333333333,
           "role": "core"
         },
         "coding_hard": {
@@ -322,24 +336,31 @@
       "overall": {
         "runs": 180,
         "expected_runs": 0,
-        "passed_runs": 174,
+        "passed_runs": 175,
         "errors": 0,
-        "pass_rate": 96.66666666666667,
+        "pass_rate": 97.22222222222223,
         "error_rate": 0.0,
-        "consistency": 93.33333333333333,
-        "mean_retries_per_task": 0.05,
-        "ttft_median_s": 0.6399613750036224,
-        "tps_median": 105.18557422812583,
-        "non_streamed_runs": 0,
+        "consistency": 95.0,
+        "mean_retries_per_task": 0.13333333333333333,
+        "ttft_median_s": 0.6039664170093602,
+        "tps_median": 95.0757414200742,
+        "non_streamed_runs": 4,
         "truncated_runs": 5,
         "empty_answer_runs": 0,
-        "prompt_tokens": 135864,
-        "completion_tokens": 267643,
-        "cost_usd": 0.15420109999999998,
-        "cost_per_success": 0.0008862132183908045,
+        "prompt_tokens": 138470,
+        "completion_tokens": 254850,
+        "cost_usd": 0.1481955,
+        "cost_per_success": 0.0008468314285714286,
         "tool_call_accuracy": 100.0,
         "completed_all": true,
-        "quality_per_active_b": null
+        "quality_per_active_b": 5.401234567901235,
+        "core_suites_run": 3,
+        "core_suites_total": 3,
+        "common_pass_rate": 95.83333333333333,
+        "common_suites": [
+          "coding",
+          "tool_use"
+        ]
       },
       "stress": {
         "runs": 180,
@@ -360,7 +381,8 @@
         "completion_tokens": 720530,
         "cost_usd": 0.46848985,
         "cost_per_success": 0.002909874844720497,
-        "completed_all": true
+        "completed_all": true,
+        "status": "ok"
       },
       "deployability": {
         "license_osi_or_openmdw": true,
@@ -369,12 +391,19 @@
         "weights_downloadable": true
       },
       "best_for": "tool_use",
-      "tier": "GMI Recommended",
+      "platform": {
+        "retried_api_errors": 53,
+        "non_streamed_runs": 12,
+        "raw_tool_call_text": 0
+      },
+      "tier": "Best value in class",
       "tier_unmet": [],
       "recommended_for": [
-        "coding",
         "documents",
         "tool_use"
+      ],
+      "uncontested_for": [
+        "documents"
       ]
     },
     {
@@ -383,7 +412,7 @@
       "focus": "coding, reasoning",
       "lab": "DeepSeek",
       "total_params_b": 290.9,
-      "active_params_b": null,
+      "active_params_b": 13,
       "license": "mit",
       "context_length": 1048575,
       "precision": "FP8",
@@ -396,44 +425,44 @@
           "status": "ok",
           "runs": 60,
           "expected_runs": 60,
-          "passed_runs": 49,
+          "passed_runs": 58,
           "errors": 0,
-          "pass_rate": 81.66666666666667,
+          "pass_rate": 96.66666666666667,
           "error_rate": 0.0,
-          "consistency": 70.0,
+          "consistency": 95.0,
           "tool_call_accuracy": null,
           "mean_retries_per_task": 0.0,
-          "ttft_median_s": 1.6952999370041653,
-          "tps_median": 167.14749905282355,
+          "ttft_median_s": 0.4869843540072907,
+          "tps_median": 422.70997860385995,
           "non_streamed_runs": 0,
-          "truncated_runs": 11,
+          "truncated_runs": 2,
           "empty_answer_runs": 0,
-          "prompt_tokens": 10818,
-          "completion_tokens": 242080,
-          "cost_usd": 0.06929692000000001,
-          "cost_per_success": 0.0014142228571428575,
+          "prompt_tokens": 11055,
+          "completion_tokens": 112640,
+          "cost_usd": 0.0330869,
+          "cost_per_success": 0.0005704637931034484,
           "role": "core"
         },
         "tool_use": {
           "status": "ok",
           "runs": 60,
           "expected_runs": 60,
-          "passed_runs": 60,
+          "passed_runs": 59,
           "errors": 0,
-          "pass_rate": 100.0,
+          "pass_rate": 98.33333333333333,
           "error_rate": 0.0,
-          "consistency": 100.0,
-          "tool_call_accuracy": 100.0,
+          "consistency": 95.0,
+          "tool_call_accuracy": 98.33333333333333,
           "mean_retries_per_task": 0.0,
-          "ttft_median_s": 1.658868666505441,
-          "tps_median": 250.60098026243645,
+          "ttft_median_s": 0.4773451244982425,
+          "tps_median": 374.83374970956027,
           "non_streamed_runs": 0,
           "truncated_runs": 0,
           "empty_answer_runs": 0,
-          "prompt_tokens": 94489,
-          "completion_tokens": 8207,
-          "cost_usd": 0.01552642,
-          "cost_per_success": 0.0002587736666666667,
+          "prompt_tokens": 86934,
+          "completion_tokens": 9359,
+          "cost_usd": 0.014791280000000002,
+          "cost_per_success": 0.0002506996610169492,
           "role": "core"
         },
         "documents": {
@@ -492,24 +521,31 @@
       "overall": {
         "runs": 120,
         "expected_runs": 0,
-        "passed_runs": 109,
+        "passed_runs": 117,
         "errors": 0,
-        "pass_rate": 90.83333333333333,
+        "pass_rate": 97.5,
         "error_rate": 0.0,
-        "consistency": 85.0,
+        "consistency": 95.0,
         "mean_retries_per_task": 0.0,
-        "ttft_median_s": 1.6857927290038788,
-        "tps_median": 203.72131959965049,
+        "ttft_median_s": 0.48565970799245406,
+        "tps_median": 402.06068436704436,
         "non_streamed_runs": 0,
-        "truncated_runs": 11,
+        "truncated_runs": 2,
         "empty_answer_runs": 0,
-        "prompt_tokens": 105307,
-        "completion_tokens": 250287,
-        "cost_usd": 0.08482334000000001,
-        "cost_per_success": 0.0007781957798165139,
-        "tool_call_accuracy": 100.0,
+        "prompt_tokens": 97989,
+        "completion_tokens": 121999,
+        "cost_usd": 0.047878180000000006,
+        "cost_per_success": 0.00040921521367521374,
+        "tool_call_accuracy": 98.33333333333333,
         "completed_all": true,
-        "quality_per_active_b": null
+        "quality_per_active_b": 7.5,
+        "core_suites_run": 2,
+        "core_suites_total": 3,
+        "common_pass_rate": 97.5,
+        "common_suites": [
+          "coding",
+          "tool_use"
+        ]
       },
       "stress": {
         "runs": 120,
@@ -530,7 +566,8 @@
         "completion_tokens": 1451340,
         "cost_usd": 0.54957392,
         "cost_per_success": 0.005607897142857143,
-        "completed_all": true
+        "completed_all": true,
+        "status": "ok"
       },
       "deployability": {
         "license_osi_or_openmdw": true,
@@ -539,11 +576,17 @@
         "weights_downloadable": true
       },
       "best_for": "tool_use",
-      "tier": "GMI Verified",
-      "tier_unmet": [
-        "TTFT median 1.69s > 1.5s"
+      "platform": {
+        "retried_api_errors": 0,
+        "non_streamed_runs": 0,
+        "raw_tool_call_text": 0
+      },
+      "tier": "Best value in class",
+      "tier_unmet": [],
+      "recommended_for": [
+        "coding"
       ],
-      "recommended_for": []
+      "uncontested_for": []
     },
     {
       "name": "qwen3.6-35b-a3b",
@@ -564,22 +607,22 @@
           "status": "ok",
           "runs": 60,
           "expected_runs": 60,
-          "passed_runs": 55,
+          "passed_runs": 58,
           "errors": 0,
-          "pass_rate": 91.66666666666667,
+          "pass_rate": 96.66666666666667,
           "error_rate": 0.0,
-          "consistency": 80.0,
+          "consistency": 90.0,
           "tool_call_accuracy": null,
           "mean_retries_per_task": 0.0,
-          "ttft_median_s": 0.827687707998848,
-          "tps_median": 130.62717535665226,
+          "ttft_median_s": 0.8566811045020586,
+          "tps_median": 125.67463668591421,
           "non_streamed_runs": 0,
-          "truncated_runs": 3,
+          "truncated_runs": 1,
           "empty_answer_runs": 0,
           "prompt_tokens": 6780,
-          "completion_tokens": 806524,
-          "cost_usd": 1.1993695800000002,
-          "cost_per_success": 0.021806719636363638,
+          "completion_tokens": 635884,
+          "cost_usd": 0.9459691800000001,
+          "cost_per_success": 0.016309813448275864,
           "role": "core"
         },
         "tool_use": {
@@ -593,15 +636,15 @@
           "consistency": 100.0,
           "tool_call_accuracy": 100.0,
           "mean_retries_per_task": 0.0,
-          "ttft_median_s": 0.7356839789936203,
-          "tps_median": 129.9348336653461,
+          "ttft_median_s": 0.7622039789857809,
+          "tps_median": 124.85550729131364,
           "non_streamed_runs": 0,
           "truncated_runs": 0,
           "empty_answer_runs": 0,
-          "prompt_tokens": 86222,
-          "completion_tokens": 17325,
-          "cost_usd": 0.047110681,
-          "cost_per_success": 0.0007851780166666667,
+          "prompt_tokens": 85776,
+          "completion_tokens": 16558,
+          "cost_usd": 0.045861078,
+          "cost_per_success": 0.0007643513,
           "role": "core"
         },
         "documents": {
@@ -615,15 +658,15 @@
           "consistency": 100.0,
           "tool_call_accuracy": null,
           "mean_retries_per_task": 0.0,
-          "ttft_median_s": 2.9046767504987656,
-          "tps_median": 231.54416318639826,
+          "ttft_median_s": 3.2158866040117573,
+          "tps_median": 239.18438024249855,
           "non_streamed_runs": 0,
           "truncated_runs": 0,
           "empty_answer_runs": 0,
           "prompt_tokens": 53379,
-          "completion_tokens": 23972,
-          "cost_usd": 0.048836412,
-          "cost_per_success": 0.0008139402,
+          "completion_tokens": 24052,
+          "cost_usd": 0.048955212000000005,
+          "cost_per_success": 0.0008159202000000001,
           "role": "core"
         },
         "coding_hard": {
@@ -696,24 +739,31 @@
       "overall": {
         "runs": 180,
         "expected_runs": 0,
-        "passed_runs": 175,
+        "passed_runs": 178,
         "errors": 0,
-        "pass_rate": 97.22222222222223,
+        "pass_rate": 98.88888888888889,
         "error_rate": 0.0,
-        "consistency": 93.33333333333333,
+        "consistency": 96.66666666666667,
         "mean_retries_per_task": 0.0,
-        "ttft_median_s": 0.8970867085008649,
-        "tps_median": 136.09298210481182,
+        "ttft_median_s": 0.9935544795007445,
+        "tps_median": 130.90101455623045,
         "non_streamed_runs": 0,
-        "truncated_runs": 3,
+        "truncated_runs": 1,
         "empty_answer_runs": 0,
-        "prompt_tokens": 146381,
-        "completion_tokens": 847821,
-        "cost_usd": 1.295316673,
-        "cost_per_success": 0.007401809560000001,
+        "prompt_tokens": 145935,
+        "completion_tokens": 676494,
+        "cost_usd": 1.04078547,
+        "cost_per_success": 0.005847109382022472,
         "tool_call_accuracy": 100.0,
         "completed_all": true,
-        "quality_per_active_b": 32.40740740740741
+        "quality_per_active_b": 32.96296296296296,
+        "core_suites_run": 3,
+        "core_suites_total": 3,
+        "common_pass_rate": 98.33333333333333,
+        "common_suites": [
+          "coding",
+          "tool_use"
+        ]
       },
       "stress": {
         "runs": 180,
@@ -734,7 +784,8 @@
         "completion_tokens": 1478827,
         "cost_usd": 2.454370679,
         "cost_per_success": 0.014269596970930233,
-        "completed_all": true
+        "completed_all": true,
+        "status": "ok"
       },
       "deployability": {
         "license_osi_or_openmdw": true,
@@ -743,9 +794,17 @@
         "weights_downloadable": true
       },
       "best_for": "tool_use",
-      "tier": "GMI Recommended",
+      "platform": {
+        "retried_api_errors": 0,
+        "non_streamed_runs": 0,
+        "raw_tool_call_text": 0
+      },
+      "tier": "Best value in class",
       "tier_unmet": [],
       "recommended_for": [
+        "documents"
+      ],
+      "uncontested_for": [
         "documents"
       ]
     },
@@ -917,7 +976,14 @@
         "cost_per_success": 0.0082483843575419,
         "tool_call_accuracy": 100.0,
         "completed_all": true,
-        "quality_per_active_b": 9.944444444444445
+        "quality_per_active_b": 9.944444444444445,
+        "core_suites_run": 3,
+        "core_suites_total": 3,
+        "common_pass_rate": 99.16666666666667,
+        "common_suites": [
+          "coding",
+          "tool_use"
+        ]
       },
       "stress": {
         "runs": 180,
@@ -938,7 +1004,8 @@
         "completion_tokens": 801595,
         "cost_usd": 3.1554916000000004,
         "cost_per_success": 0.019358844171779143,
-        "completed_all": true
+        "completed_all": true,
+        "status": "ok"
       },
       "deployability": {
         "license_osi_or_openmdw": true,
@@ -947,9 +1014,19 @@
         "weights_downloadable": true
       },
       "best_for": "documents",
-      "tier": "GMI Recommended",
+      "platform": {
+        "retried_api_errors": 0,
+        "non_streamed_runs": 0,
+        "raw_tool_call_text": 0
+      },
+      "tier": "Best value in class",
       "tier_unmet": [],
       "recommended_for": [
+        "coding",
+        "documents",
+        "tool_use"
+      ],
+      "uncontested_for": [
         "coding",
         "documents",
         "tool_use"
@@ -1123,7 +1200,14 @@
         "cost_per_success": 0.005021517721518987,
         "tool_call_accuracy": 100.0,
         "completed_all": true,
-        "quality_per_active_b": 3.157474020783373
+        "quality_per_active_b": 3.157474020783373,
+        "core_suites_run": 3,
+        "core_suites_total": 3,
+        "common_pass_rate": 89.16666666666667,
+        "common_suites": [
+          "coding",
+          "tool_use"
+        ]
       },
       "stress": {
         "runs": 180,
@@ -1144,7 +1228,8 @@
         "completion_tokens": 342598,
         "cost_usd": 1.2837311999999999,
         "cost_per_success": 0.008853318620689655,
-        "completed_all": true
+        "completed_all": true,
+        "status": "ok"
       },
       "deployability": {
         "license_osi_or_openmdw": true,
@@ -1153,12 +1238,18 @@
         "weights_downloadable": true
       },
       "best_for": "tool_use",
-      "tier": "GMI Verified",
+      "platform": {
+        "retried_api_errors": 0,
+        "non_streamed_runs": 0,
+        "raw_tool_call_text": 0
+      },
+      "tier": "Completed",
       "tier_unmet": [
         "consistency 76.7 < 80",
         "TTFT median 1.95s > 1.5s"
       ],
-      "recommended_for": []
+      "recommended_for": [],
+      "uncontested_for": []
     },
     {
       "name": "minimax-m2.5",
@@ -1292,7 +1383,14 @@
         "cost_per_success": 0.0018376121739130434,
         "tool_call_accuracy": 100.0,
         "completed_all": true,
-        "quality_per_active_b": 9.583333333333332
+        "quality_per_active_b": 9.583333333333332,
+        "core_suites_run": 2,
+        "core_suites_total": 3,
+        "common_pass_rate": 95.83333333333333,
+        "common_suites": [
+          "coding",
+          "tool_use"
+        ]
       },
       "stress": {
         "runs": 120,
@@ -1313,7 +1411,8 @@
         "completion_tokens": 875898,
         "cost_usd": 1.2514215,
         "cost_per_success": 0.013035640624999999,
-        "completed_all": true
+        "completed_all": true,
+        "status": "ok"
       },
       "deployability": {
         "license_osi_or_openmdw": false,
@@ -1322,11 +1421,17 @@
         "weights_downloadable": true
       },
       "best_for": "tool_use",
-      "tier": "GMI Production Ready",
+      "platform": {
+        "retried_api_errors": 0,
+        "non_streamed_runs": 0,
+        "raw_tool_call_text": 0
+      },
+      "tier": "Meets production bar",
       "tier_unmet": [
         "not the lowest cost per successful task in any workload for its size class"
       ],
-      "recommended_for": []
+      "recommended_for": [],
+      "uncontested_for": []
     }
   ]
 }

@@ -1,0 +1,103 @@
+{
+  "manifest_id": "20261107T062928Z-39cc",
+  "started": "2026-11-07T06:29:28+00:00",
+  "finished": "2026-11-07T06:53:32+00:00",
+  "command": "bench.py run --models gemma-4-26b-a4b,glm-5.3-flash,deepseek-v4-flash,qwen3.6-35b-a3b --suites core --rerun --yes",
+  "python": "3.12.13",
+  "git": {
+    "commit": "66fb2c64221e0f4f51d0d196ca84b86fb951e427",
+    "branch": "main",
+    "dirty": true
+  },
+  "standard": "1.0",
+  "suites": {
+    "coding": {
+      "version": "1.0.0",
+      "fingerprint": "3cb7b868e334",
+      "kind": "coding"
+    },
+    "tool_use": {
+      "version": "1.0.0",
+      "fingerprint": "d51aef1642ae",
+      "kind": "tool_use"
+    },
+    "documents": {
+      "version": "1.0.0",
+      "fingerprint": "2e61c2a31027",
+      "kind": "documents"
+    }
+  },
+  "models": [
+    {
+      "name": "gemma-4-26b-a4b",
+      "id": "google/gemma-4-26b-a4b-it",
+      "input_price_per_m": 0.13,
+      "output_price_per_m": 0.4
+    },
+    {
+      "name": "glm-5.3-flash",
+      "id": "zai-org/GLM-5.3-Flash",
+      "input_price_per_m": 0.15,
+      "output_price_per_m": 0.5
+    },
+    {
+      "name": "deepseek-v4-flash",
+      "id": "deepseek-ai/DeepSeek-V4-Flash",
+      "input_price_per_m": 0.14,
+      "output_price_per_m": 0.28
+    },
+    {
+      "name": "qwen3.6-35b-a3b",
+      "id": "Qwen/Qwen3.6-35B-A3B",
+      "input_price_per_m": 0.248,
+      "output_price_per_m": 1.485
+    }
+  ],
+  "settings": {
+    "runs_per_task": 3,
+    "temperature": 0,
+    "seed": 1234,
+    "concurrency_per_model": 4,
+    "max_api_retries": 3,
+    "max_rate_limit_waits": 20,
+    "request_timeout_s": 300,
+    "max_tool_turns": 6,
+    "coding_timeout_s": 10,
+    "backoff_base_s": 2.0,
+    "retry_errors": false,
+    "circuit_breaker_errors": 8,
+    "dry_run": false,
+    "manifest_id": "20261107T062928Z-39cc",
+    "rerun": true
+  },
+  "summary": {
+    "deepseek-v4-flash": {
+      "done": 120,
+      "passed": 117,
+      "errors": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    "glm-5.3-flash": {
+      "done": 180,
+      "passed": 175,
+      "errors": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    "gemma-4-26b-a4b": {
+      "done": 120,
+      "passed": 119,
+      "errors": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    "qwen3.6-35b-a3b": {
+      "done": 180,
+      "passed": 178,
+      "errors": 0,
+      "skipped": 0,
+      "not_run": 0
+    }
+  }
+}

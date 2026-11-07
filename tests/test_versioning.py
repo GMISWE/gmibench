@@ -110,3 +110,42 @@ def test_new_suite_folder_is_discovered(tmp_path):
 def test_validate_and_generate_check_pass():
     assert bench.main(["validate"]) == 0
     assert bench.main(["generate", "--check", "--suite", "coding,tool_use,tool_use_hard"]) == 0
+
+
+def test_rerun_redoes_recorded_runs():
+    task = {"id": "t1", "hash": "h"}
+    done = {("t1", 0): {"task_hash": "h", "error": None}}
+    assert pending_jobs([task], done, 1, retry_errors=False) == []
+    assert pending_jobs([task], done, 1, retry_errors=False, rerun=True) == [(task, 0)]
+
+
+def test_uncontested_best_value(thresholds):
+    def card(name, size, cps):
+        return {"name": name, "size_class": size,
+                "overall": {"pass_rate": 90.0, "consistency": 90.0, "ttft_median_s": 0.5, "error_rate": 0.0,
+                            "completed_all": True},
+                "sets": {"coding": {"status": "ok", "cost_per_success": cps}}}
+    out = {c["name"]: c for c in scoring.assign_tiers([card("a", "small", 0.1), card("b", "small", 0.2),
+                                                       card("c", "mid", 0.5)], thresholds)}
+    assert out["a"]["tier"] == scoring.TIER_RECOMMENDED and out["a"]["uncontested_for"] == []
+    assert out["c"]["uncontested_for"] == ["coding"]
+
+
+def test_readme_table_is_replaced_between_markers(tmp_path):
+    from gmibench.report import update_readme
+    readme = tmp_path / "README.md"
+    readme.write_text("intro\n<!-- results-table:start -->\nold\n<!-- results-table:end -->\nrest\n")
+    card = {"name": "m", "size_class": "small", "tier": scoring.TIER_VERIFIED, "recommended_for": [],
+            "overall": {"pass_rate": 80.0, "common_pass_rate": 80.0, "core_suites_run": 2, "core_suites_total": 3,
+                        "cost_per_success": 0.001, "truncated_runs": 1},
+            "stress": {"pass_rate": 70.0, "truncated_runs": 2}}
+    assert update_readme(readme, [card])
+    text = readme.read_text()
+    assert "old" not in text and "| m | small | Completed | 2/3 | 80.0% |" in text and text.endswith("rest\n")
+
+
+def test_coding_stderr_hides_temp_paths():
+    from gmibench import checkers
+    task = {"entry_point": "f", "tests": "assert f() == 1"}
+    ok, d = checkers.check_coding(task, "```python\ndef f():\n    return 2\n```")
+    assert not ok and "<tmp>" in d["stderr_tail"] and "gmibench-" not in d["stderr_tail"]

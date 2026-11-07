@@ -188,7 +188,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     suites = _select_suites(args.suites, std)
     settings = RunSettings.from_config(std.protocol, settings_cfg.get("run", {}), runs_per_task=args.runs,
                                        concurrency_per_model=args.concurrency, dry_run=args.dry_run,
-                                       retry_errors=args.retry_errors)
+                                       retry_errors=args.retry_errors, rerun=args.rerun)
     if args.dry_run:
         settings.backoff_base_s = 0.01
     results_dir = _results_dir(args)
@@ -269,6 +269,10 @@ def cmd_report(args: argparse.Namespace) -> int:
         return 1
     paths = write_reports(cards, _results_dir(args), std.scoring_dict(), dry_run=args.dry_run,
                           labels={s.name: s.title for s in suites}, standard_label=std.label)
+    if not args.dry_run and not args.results_dir and not std.is_dev:
+        from gmibench.report import update_readme
+        if update_readme(ROOT / "README.md", cards):
+            paths.append(ROOT / "README.md")
     print("Wrote:")
     for p in paths:
         print("  ", p.relative_to(ROOT) if p.is_relative_to(ROOT) else p)
@@ -357,6 +361,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--runs", type=int, help="runs per task (default from the standard's protocol)")
     p.add_argument("--concurrency", type=int, help="parallel requests per model (default 4)")
     p.add_argument("--retry-errors", action="store_true", help="re-run recorded runs that ended in an API error")
+    p.add_argument("--rerun", action="store_true",
+                   help="re-measure even recorded runs (new time window); old records stay for audit")
     p.add_argument("--yes", "-y", action="store_true", help="skip the cost confirmation prompt")
     p.set_defaults(func=cmd_run)
 
