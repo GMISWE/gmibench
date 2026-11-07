@@ -1,0 +1,155 @@
+# Cohort for the GMI Open Model Standard benchmark.
+#
+# Field sources (checked 2026-11-05):
+#   context_length, precision, input/output price  -> GMI `GET /v1/models` (served values)
+#   license, total_params_b, weights_url, vision   -> Hugging Face model API
+#   active_params_b                                -> the "A<n>B" suffix in the model name / model card
+# Unknown values are `null`. The CLI prints a warning for each one.
+#
+# `name` is the short alias used on the CLI (--models gpt-oss-120b).
+# `vision: true` means the model runs the documents task set. Others get `n/a`.
+# Prices are GMI list prices in USD per 1M tokens (before any account discount).
+
+models:
+  - name: nemotron-3.5-super-vl
+    id: nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16
+    focus: vision, documents, agents
+    lab: NVIDIA
+    total_params_b: 124.5
+    active_params_b: 12
+    license: openmdw-1.1
+    context_length: 32768
+    precision: BF16
+    input_price_per_m: 0.10
+    output_price_per_m: 0.50
+    vision: true  # VL model; endpoint returned 429 during probe, not yet verified
+    weights_url: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16
+
+  - name: nemotron-3.5-lightning
+    id: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16
+    focus: small vision agent
+    lab: NVIDIA
+    total_params_b: 31.6
+    active_params_b: 3
+    license: openmdw-1.1
+    context_length: 65536
+    precision: BF16
+    input_price_per_m: 0.15
+    output_price_per_m: 1.00
+    vision: true  # listed as vision in the brief; endpoint returned 523 during probe, not yet verified
+    weights_url: https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16
+
+  - name: gpt-oss-120b
+    id: openai/gpt-oss-120b
+    focus: coding, reasoning
+    lab: OpenAI
+    total_params_b: 116.8
+    active_params_b: 5.1
+    license: apache-2.0
+    context_length: 131072
+    precision: FP8
+    input_price_per_m: 0.05
+    output_price_per_m: 0.25
+    vision: false
+    weights_url: https://huggingface.co/openai/gpt-oss-120b
+
+  - name: gemma-4-26b-a4b
+    id: google/gemma-4-26b-a4b-it
+    focus: general, tool use
+    lab: Google
+    total_params_b: 25.8
+    active_params_b: 4
+    license: apache-2.0
+    context_length: 256000
+    precision: FP8
+    input_price_per_m: 0.13
+    output_price_per_m: 0.40
+    vision: false  # GMI returned 400 for image input (probe 2026-11-05)
+    weights_url: https://huggingface.co/google/gemma-4-26B-A4B-it
+
+  - name: glm-5.3-flash
+    id: zai-org/GLM-5.3-Flash
+    focus: coding agent
+    lab: Zhipu AI (Z.ai)
+    total_params_b: 321.3
+    active_params_b: null
+    license: mit
+    context_length: 1048576
+    precision: FP8
+    input_price_per_m: 0.15
+    output_price_per_m: 0.50
+    vision: true  # image input accepted on GMI (probe 2026-11-05)
+    weights_url: https://huggingface.co/zai-org/GLM-5.3-Flash
+
+  - name: deepseek-v4-flash
+    id: deepseek-ai/DeepSeek-V4-Flash
+    focus: coding, reasoning
+    lab: DeepSeek
+    total_params_b: 290.9
+    active_params_b: null
+    license: mit
+    context_length: 1048575
+    precision: FP8
+    input_price_per_m: 0.14
+    output_price_per_m: 0.28
+    vision: false  # GMI: image_url not supported for this model
+    weights_url: https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
+
+  - name: qwen3.6-35b-a3b
+    id: Qwen/Qwen3.6-35B-A3B
+    focus: tool use
+    lab: Alibaba Qwen
+    total_params_b: 36.0
+    active_params_b: 3
+    license: apache-2.0
+    context_length: 262144
+    precision: FP8
+    input_price_per_m: 0.248
+    output_price_per_m: 1.485
+    vision: true  # image input accepted on GMI (probe 2026-11-05)
+    weights_url: https://huggingface.co/Qwen/Qwen3.6-35B-A3B
+
+  # --- Replacements (added 2026-11-06). The three NVIDIA/OpenAI models above were still
+  # down on GMI at 2026-11-06 15:42 PST (523 / 429 / 503). See reports/gmi-incident-2026-11-05.md.
+
+  - name: qwen3.5-122b-a10b
+    id: Qwen/Qwen3.5-122B-A10B
+    focus: vision, documents, agents  # stands in for nemotron-3.5-super-vl (mid size, vision)
+    lab: Alibaba Qwen
+    total_params_b: 125.1
+    active_params_b: 10
+    license: apache-2.0
+    context_length: 262144
+    precision: FP8
+    input_price_per_m: 0.40
+    output_price_per_m: 3.20
+    vision: true  # image input accepted on GMI (probe 2026-11-06)
+    weights_url: https://huggingface.co/Qwen/Qwen3.5-122B-A10B
+
+  - name: qwen3.5-27b
+    id: Qwen/Qwen3.5-27B
+    focus: small vision agent  # stands in for nemotron-3.5-lightning (small, vision)
+    lab: Alibaba Qwen
+    total_params_b: 27.8
+    active_params_b: 27.8  # dense model
+    license: apache-2.0
+    context_length: 262144
+    precision: FP8
+    input_price_per_m: 0.30
+    output_price_per_m: 2.40
+    vision: true  # image input accepted on GMI (probe 2026-11-06)
+    weights_url: https://huggingface.co/Qwen/Qwen3.5-27B
+
+  - name: minimax-m2.5
+    id: MiniMaxAI/MiniMax-M2.5
+    focus: coding, reasoning  # stands in for gpt-oss-120b (text only)
+    lab: MiniMax
+    total_params_b: 228.7
+    active_params_b: 10  # model card: 230B total, 10B active
+    license: modified-mit  # MIT plus an attribution clause; not an OSI license id
+    context_length: 196608
+    precision: FP8
+    input_price_per_m: 0.30
+    output_price_per_m: 1.20
+    vision: false  # GMI accepts image input but the model ignores it (probe 2026-11-06)
+    weights_url: https://huggingface.co/MiniMaxAI/MiniMax-M2.5

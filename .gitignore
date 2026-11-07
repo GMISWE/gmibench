@@ -1,0 +1,12 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+results_dryrun/
+results/charts/.mplcache/
+results_dryrun/charts/.mplcache/
+.DS_Store
+.claude/
+results_smoke/
