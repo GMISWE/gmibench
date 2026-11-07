@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="t d">
+  <title id="t">GMI Open Model Standard</title>
+  <desc id="d">A reproducible, versioned benchmark for open-weight models served on GMI Cloud. Standard v1.0: 6 suites, 120 tasks, 3 runs per task, 10 models.</desc>
+  <style>
+    :root { --bg:#ffffff; --panel:#f6f8fa; --line:#d0d7de; --ink:#1f2328; --ink2:#59636e;
+            --blue:#2a78d6; --orange:#eb6834; --blue-soft:#ddeafb; --link:#c4c9cf; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#0d1117; --panel:#161b22; --line:#30363d; --ink:#e6edf3; --ink2:#9198a1;
+              --blue:#3987e5; --orange:#d95926; --blue-soft:#12253f; --link:#3d444d; }
+    }
+    .bg { fill: var(--panel); stroke: var(--line); }
+    .ink { fill: var(--ink); } .ink2 { fill: var(--ink2); }
+    .pill { fill: var(--bg); stroke: var(--line); }
+    .pill-main { fill: var(--blue); }
+    .blue { fill: var(--blue); } .orange { fill: var(--orange); }
+    .link { stroke: var(--link); stroke-width: 3; stroke-linecap: round; }
+    .grid { stroke: var(--line); stroke-width: 1; }
+    .ring { stroke: var(--panel); stroke-width: 3; }
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  </style>
+  <rect class="bg" x="0.5" y="0.5" width="1199" height="299" rx="16"/>
+  <rect class="pill-main" x="0" y="0" width="8" height="300" rx="4"/>
+
+  <text class="ink2" x="56" y="74" font-size="14" font-weight="600" letter-spacing="2">GMI CLOUD · OPEN-WEIGHT MODELS</text>
+  <text class="ink" x="54" y="132" font-size="50" font-weight="700">GMI Open Model Standard</text>
+  <text class="ink2" x="56" y="172" font-size="20">A reproducible, versioned benchmark: scorecards and tiers</text>
+  <text class="ink2" x="56" y="198" font-size="20">for open-weight models served on GMI Cloud.</text>
+
+  <g font-size="15" font-weight="600">
+    <rect class="pill-main" x="56" y="226" width="138" height="34" rx="17"/>
+    <text x="125" y="248" text-anchor="middle" fill="#ffffff">Standard v1.0</text>
+    <rect class="pill" x="206" y="226" width="92" height="34" rx="17"/>
+    <text class="ink" x="252" y="248" text-anchor="middle">6 suites</text>
+    <rect class="pill" x="310" y="226" width="102" height="34" rx="17"/>
+    <text class="ink" x="361" y="248" text-anchor="middle">120 tasks</text>
+    <rect class="pill" x="424" y="226" width="146" height="34" rx="17"/>
+    <text class="ink" x="497" y="248" text-anchor="middle">3 runs per task</text>
+    <rect class="pill" x="582" y="226" width="104" height="34" rx="17"/>
+    <text class="ink" x="634" y="248" text-anchor="middle">10 models</text>
+  </g>
+
+  <!-- Motif: a small core-vs-stress dumbbell chart -->
+  <g transform="translate(830,58)">
+    <line class="grid" x1="0" y1="0" x2="0" y2="184"/>
+    <line class="grid" x1="110" y1="0" x2="110" y2="184"/>
+    <line class="grid" x1="220" y1="0" x2="220" y2="184"/>
+    <line class="grid" x1="330" y1="0" x2="330" y2="184"/>
+    <g>
+      <line class="link" x1="196" y1="22" x2="318" y2="22"/>
+      <circle class="orange ring" cx="196" cy="22" r="10"/><circle class="blue ring" cx="318" cy="22" r="10"/>
+      <line class="link" x1="190" y1="62" x2="310" y2="62"/>
+      <circle class="orange ring" cx="190" cy="62" r="10"/><circle class="blue ring" cx="310" cy="62" r="10"/>
+      <line class="link" x1="258" y1="102" x2="290" y2="102"/>
+      <circle class="orange ring" cx="258" cy="102" r="10"/><circle class="blue ring" cx="290" cy="102" r="10"/>
+      <line class="link" x1="78" y1="142" x2="280" y2="142"/>
+      <circle class="orange ring" cx="78" cy="142" r="10"/><circle class="blue ring" cx="280" cy="142" r="10"/>
+      <line class="link" x1="120" y1="182" x2="240" y2="182"/>
+      <circle class="orange ring" cx="120" cy="182" r="10"/><circle class="blue ring" cx="240" cy="182" r="10"/>
+    </g>
+  </g>
+</svg>

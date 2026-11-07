@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="580" viewBox="0 0 1200 580" role="img" aria-labelledby="t d">
+  <title id="t">How versions work</title>
+  <desc id="d">Three layers: each task has a content hash, each suite has a semantic version, each standard pins suite versions and tier rules and is tagged in git. Changing a test takes six steps: edit build.py, generate, bump the suite version, validate, run only the changed tasks, release a new standard and tag it. Timeline: v1.0 released 2026-11-06; v1.1 next.</desc>
+  <style>
+    :root { --bg:#ffffff; --card:#f6f8fa; --line:#d0d7de; --ink:#1f2328; --ink2:#59636e;
+            --blue:#2a78d6; --blue-soft:#ddeafb; --orange:#eb6834; --orange-soft:#fde4d9; --arrow:#8c959f; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#0d1117; --card:#161b22; --line:#30363d; --ink:#e6edf3; --ink2:#9198a1;
+              --blue:#3987e5; --blue-soft:#12253f; --orange:#d95926; --orange-soft:#3a1d10; --arrow:#6e7681; }
+    }
+    .bg { fill: var(--bg); }
+    .card { fill: var(--card); stroke: var(--line); stroke-width: 1.5; }
+    .card-blue { fill: var(--blue-soft); stroke: var(--blue); stroke-width: 2; }
+    .card-orange { fill: var(--orange-soft); stroke: var(--orange); stroke-width: 2; }
+    .ink { fill: var(--ink); } .ink2 { fill: var(--ink2); } .blue { fill: var(--blue); } .orange { fill: var(--orange); }
+    .arrow { stroke: var(--arrow); stroke-width: 2; fill: none; }
+    .head { fill: var(--arrow); }
+    .rail { stroke: var(--line); stroke-width: 3; }
+    .dash { stroke: var(--arrow); stroke-width: 2; stroke-dasharray: 6 6; fill: none; }
+    .hollow { fill: var(--bg); stroke: var(--arrow); stroke-width: 2.5; }
+    .node { fill: var(--blue); } .node-o { fill: var(--orange); }
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .lbl { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; }
+    .big { font-size: 26px; font-weight: 700; }
+    .h { font-size: 16px; font-weight: 700; } .s { font-size: 14px; }
+    .m { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+    .sec { font-size: 15px; font-weight: 700; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path class="head" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1200" height="580" rx="16"/>
+
+  <!-- A. Three layers -->
+  <text class="ink2 sec" x="20" y="34">Three layers</text>
+  <rect class="card" x="20" y="50" width="350" height="140" rx="12"/>
+  <text class="ink2 lbl" x="40" y="80">TASK</text>
+  <text class="ink big m" x="40" y="116" style="font-size:24px">a166e1d8da11</text>
+  <text class="ink2 s" x="40" y="146">A hash of the prompt, tests, answer and image.</text>
+  <text class="ink2 s" x="40" y="168">Saved with every result.</text>
+
+  <rect class="card-blue" x="425" y="50" width="350" height="140" rx="12"/>
+  <text class="ink2 lbl" x="445" y="80">SUITE</text>
+  <text class="ink big" x="445" y="116">coding 1.0.0</text>
+  <text class="ink2 s" x="445" y="146">A folder of tasks with its own version.</text>
+  <text class="ink2 s" x="445" y="168">Bump it when its tasks change.</text>
+
+  <rect class="card-orange" x="830" y="50" width="350" height="140" rx="12"/>
+  <text class="ink2 lbl" x="850" y="80">STANDARD</text>
+  <text class="ink big" x="850" y="116">v1.0</text>
+  <text class="ink2 s" x="850" y="146">Pins suite versions and the tier rules.</text>
+  <text class="ink2 s" x="850" y="168">Tagged in git: standard-v1.0.</text>
+
+  <path class="arrow" d="M372,120 H423" marker-end="url(#a)"/>
+  <path class="arrow" d="M777,120 H828" marker-end="url(#a)"/>
+
+  <!-- B. Six steps -->
+  <text class="ink2 sec" x="20" y="250">Change a test in six steps</text>
+  <line class="rail" x1="100" y1="296" x2="1100" y2="296"/>
+  <g font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">
+    <circle class="node" cx="100" cy="296" r="18"/><text x="100" y="301">1</text>
+    <circle class="node" cx="300" cy="296" r="18"/><text x="300" y="301">2</text>
+    <circle class="node" cx="500" cy="296" r="18"/><text x="500" y="301">3</text>
+    <circle class="node" cx="700" cy="296" r="18"/><text x="700" y="301">4</text>
+    <circle class="node" cx="900" cy="296" r="18"/><text x="900" y="301">5</text>
+    <circle class="node-o" cx="1100" cy="296" r="18"/><text x="1100" y="301">6</text>
+  </g>
+  <g text-anchor="middle">
+    <text class="ink h" x="100" y="340">Edit</text>
+    <text class="ink2 s" x="100" y="362">the suite's build.py</text>
+    <text class="ink h" x="300" y="340">Generate</text>
+    <text class="ink2 s" x="300" y="362">new task hashes</text>
+    <text class="ink h" x="500" y="340">Bump</text>
+    <text class="ink2 s" x="500" y="362">the suite version</text>
+    <text class="ink h" x="700" y="340">Validate</text>
+    <text class="ink2 s" x="700" y="362">references pass, hashes match</text>
+    <text class="ink h" x="900" y="340">Run</text>
+    <text class="ink2 s" x="900" y="362">only changed tasks re-run</text>
+    <text class="ink h" x="1100" y="340">Release</text>
+    <text class="ink2 s" x="1100" y="362">new standard + git tag</text>
+    <text class="ink2 m" x="300" y="388">bench.py generate</text>
+    <text class="ink2 m" x="500" y="388">suite.yaml</text>
+    <text class="ink2 m" x="700" y="388">bench.py validate</text>
+    <text class="ink2 m" x="900" y="388">bench.py run</text>
+    <text class="ink2 m" x="1100" y="388">bench.py release 1.1</text>
+  </g>
+
+  <!-- C. Timeline -->
+  <text class="ink2 sec" x="20" y="450">Releases</text>
+  <line class="rail" x1="60" y1="492" x2="440" y2="492"/>
+  <path class="dash" d="M440,492 H1140"/>
+  <circle class="node-o" cx="150" cy="492" r="12"/>
+  <text class="ink h" x="150" y="530" text-anchor="middle">v1.0 · 2026-11-06</text>
+  <text class="ink2 s" x="150" y="552" text-anchor="middle">6 suites, 120 tasks, 10 models</text>
+  <circle class="hollow" cx="560" cy="492" r="12"/>
+  <text class="ink h" x="560" y="530" text-anchor="middle">v1.1 · next minor</text>
+  <text class="ink2 s" x="560" y="552" text-anchor="middle">suite versions change or suites are added</text>
+  <circle class="hollow" cx="960" cy="492" r="12"/>
+  <text class="ink h" x="960" y="530" text-anchor="middle">v2.0 · next major</text>
+  <text class="ink2 s" x="960" y="552" text-anchor="middle">core suites or tier rules change</text>
+</svg>

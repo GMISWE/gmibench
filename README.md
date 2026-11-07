@@ -1,3 +1,14 @@
+<p align="center">
+  <img src="docs/images/banner.svg" alt="GMI Open Model Standard: a reproducible, versioned benchmark for open-weight models served on GMI Cloud. Standard v1.0, 6 suites, 120 tasks, 3 runs per task, 10 models." width="100%">
+</p>
+
+<p align="center">
+  <a href="standards/v1.0.yaml"><img alt="Standard v1.0" src="https://img.shields.io/badge/standard-v1.0-2a78d6"></a>
+  <a href="https://github.com/GMISWE/gmibench/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/GMISWE/gmibench/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-59636e"></a>
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-59636e">
+</p>
+
 # GMI Open Model Standard benchmark
 
 A reproducible harness that tests small and mid-size open-weight models served on
@@ -6,8 +17,36 @@ A reproducible harness that tests small and mid-size open-weight models served o
 It runs versioned test **suites** (coding, tool use, document extraction, and harder stress
 variants), records speed, tokens, retries and cost for every run, and scores each model on
 five dimensions: capability, efficiency, agent reliability, unit economics and deployability.
-Scores are always tied to a released **standard** (currently v1.0), so a published result
-always means the same tasks and rules.
+Every score is tied to a released **standard** (now **v1.0**), so a published result always
+means the same tasks and the same rules, and anyone can reproduce it.
+
+## Results (Standard v1.0)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="results/charts/leaderboard_dark.png">
+  <img alt="Core vs stress pass rate per model under Standard v1.0. Gemma 4 26B 100 / 90.8, Qwen3.5-122B 99.4 / 90.6, Qwen3.6-35B 97.2 / 95.6, GLM-5.3-Flash 96.7 / 89.4, MiniMax-M2.5 95.8 / 80.0, DeepSeek V4 Flash 90.8 / 81.7, Qwen3.5-27B 87.8 / 80.6." src="results/charts/leaderboard_light.png" width="100%">
+</picture>
+
+| Model | Size | Tier | Core pass | Stress pass | Cost per success |
+|---|---|---|---|---|---|
+| Gemma 4 26B A4B | small | **GMI Recommended** | 100.0% | 90.8% | $0.00013 |
+| Qwen3.6 35B A3B | small | **GMI Recommended** | 97.2% | 95.6% | $0.00740 |
+| Qwen3.5 122B A10B | mid | **GMI Recommended** | 99.4% | 90.6% | $0.00825 |
+| GLM-5.3-Flash | large | **GMI Recommended** | 96.7% | 89.4% | $0.00089 |
+| MiniMax-M2.5 | large | GMI Production Ready | 95.8% | 80.0% | $0.00184 |
+| DeepSeek V4 Flash | large | GMI Verified | 90.8% | 81.7% | $0.00078 |
+| Qwen3.5 27B | small | GMI Verified | 87.8% | 80.6% | $0.00502 |
+| Nemotron 3.5 Super-VL, Nemotron 3.5 Lightning, gpt-oss-120b | | Not verified (endpoint down) | | | |
+
+Core suites set the tier; stress suites are a separate score. Full tables:
+[`results/summary.md`](results/summary.md) · per-model scorecards: `results/scorecard_*.md` ·
+recorded 2026-11-05/06, 3 runs per task.
+
+## How it works
+
+<p align="center">
+  <img src="docs/images/how-it-works.svg" alt="Suites and models feed the runner. The runner writes raw results with task hash, manifest ID and price. Scoring under a released standard keeps only current results and produces scorecards and tiers." width="100%">
+</p>
 
 ## Setup
 
@@ -101,9 +140,33 @@ results/                  raw/, manifests/, scores.json, scorecard_*.md, summary
 tests/                    pytest suite
 CHANGELOG.md              what changed in each standard and harness release
 CONTRIBUTING.md           how to add tests, suites, kinds and models, and how to release
+docs/images/              README banner and diagrams (SVG, light and dark)
 ```
 
 ## Versions and tracking
+
+<p align="center">
+  <img src="docs/images/versioning.svg" alt="Three layers: task hash, suite version, standard version. Six steps to change a test: edit, generate, bump, validate, run, release. Releases: v1.0 on 2026-11-06, v1.1 next minor, v2.0 next major." width="100%">
+</p>
+
+**Current standard: v1.0** (released 2026-11-06, git tag `standard-v1.0`)
+
+| Suite | Version | Role | Tasks | What it tests |
+|---|---|---|---|---|
+| `coding` | 1.0.0 | core | 20 | Python functions checked by hidden unit tests |
+| `tool_use` | 1.0.0 | core | 20 | weather / order / calculator tool calls and answers |
+| `documents` | 1.0.0 | core | 20 | invoice and receipt images to JSON (vision models) |
+| `coding_hard` | 1.0.0 | stress | 20 | parsers, regex engine, Sudoku, graph and DP, with time limits |
+| `tool_use_hard` | 2.0.0 | stress | 20 | support agent with a refund policy, 13 tools, state checks |
+| `documents_hard` | 1.0.0 | stress | 20 | degraded scans, European formats, partial payments |
+
+Run `python bench.py suites` to see the same table for your checkout, with a status column
+that says whether each suite still matches the standard. Version rules:
+
+- **Suite** `MAJOR.MINOR.PATCH`: patch = fix that should not change who passes; minor = tasks
+  added; major = tasks replaced or made harder.
+- **Standard** `MAJOR.MINOR`: minor = suite versions change or stress suites are added;
+  major = core suites or tier rules change (tiers are not comparable across majors).
 
 Four things keep results comparable as tests are added:
 

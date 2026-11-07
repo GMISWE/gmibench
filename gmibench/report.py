@@ -311,6 +311,81 @@ def write_charts(cards: list[dict[str, Any]], out_dir: Path, thresholds: dict[st
     return paths
 
 
+# Validated categorical slots 1-2 (blue, orange) per mode, plus surfaces and inks.
+_THEMES = {
+    "light": {"surface": "#fcfcfb", "ink": "#0b0b0b", "ink2": "#52514e", "grid": "#e4e3df",
+              "core": "#2a78d6", "stress": "#eb6834", "link": "#b9b8b2"},
+    "dark": {"surface": "#1a1a19", "ink": "#f0efec", "ink2": "#c3c2b7", "grid": "#33332f",
+             "core": "#3987e5", "stress": "#d95926", "link": "#5b5a55"},
+}
+
+
+def write_leaderboard(cards: list[dict[str, Any]], out_dir: Path) -> list[Path]:
+    """Dumbbell chart for the README: core vs stress pass rate per model, light and dark versions."""
+    os.environ.setdefault("MPLCONFIGDIR", str(out_dir / ".mplcache"))
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
+
+    # Only models with at least one answered run (models whose endpoint was down are listed in a note).
+    ran = [c for c in cards if c["overall"].get("pass_rate") is not None and c["overall"].get("runs")
+           and (c["overall"].get("error_rate") or 0) < 1]
+    ran.sort(key=lambda c: (c["overall"]["pass_rate"], (c.get("stress") or {}).get("pass_rate") or 0))
+    skipped = [c["name"] for c in cards if c not in ran]
+    paths: list[Path] = []
+    if not ran:
+        return paths
+    lows = [v for c in ran for v in (c["overall"]["pass_rate"], (c.get("stress") or {}).get("pass_rate"))
+            if v is not None]
+    x_min = max(0, min(50, int(min(lows) // 10 * 10) - 10))
+    for mode, t in _THEMES.items():
+        fig, ax = plt.subplots(figsize=(10, 0.55 * len(ran) + 1.9), dpi=160)
+        fig.patch.set_facecolor(t["surface"])
+        ax.set_facecolor(t["surface"])
+        for i, c in enumerate(ran):
+            core = c["overall"]["pass_rate"]
+            stress = (c.get("stress") or {}).get("pass_rate")
+            if stress is not None:
+                ax.plot([stress, core], [i, i], color=t["link"], linewidth=2, zorder=1, solid_capstyle="round")
+                ax.scatter([stress], [i], s=90, color=t["stress"], edgecolors=t["surface"], linewidths=2, zorder=3)
+            ax.scatter([core], [i], s=90, color=t["core"], edgecolors=t["surface"], linewidths=2, zorder=4)
+            note = f"{core:.1f} / {stress:.1f}   {c['tier']}" if stress is not None else f"{core:.1f}   {c['tier']}"
+            ax.annotate(note, xy=(1.0, i), xycoords=("axes fraction", "data"), xytext=(12, 0),
+                        textcoords="offset points", va="center", fontsize=9, color=t["ink2"])
+        ax.set_yticks(range(len(ran)), [c["name"] for c in ran], fontsize=10, color=t["ink"])
+        ax.set_xlim(x_min, 101)
+        ax.set_ylim(-0.7, len(ran) - 0.3)
+        ax.set_xlabel("Pass rate (%)", color=t["ink2"], fontsize=9)
+        ax.tick_params(axis="x", colors=t["ink2"], labelsize=9)
+        ax.tick_params(axis="y", length=0)
+        ax.grid(True, axis="x", color=t["grid"], linewidth=0.8)
+        ax.set_axisbelow(True)
+        for side in ("top", "right", "left"):
+            ax.spines[side].set_visible(False)
+        ax.spines["bottom"].set_color(t["grid"])
+        title = "Core vs stress pass rate" + (f"  ·  {STANDARD_LABEL}" if STANDARD_LABEL else "")
+        fig.text(0.015, 0.975, title, ha="left", va="top", fontsize=12, fontweight="bold", color=t["ink"])
+        handles = [Line2D([], [], marker="o", linestyle="", markersize=8, color=t["core"], label="Core suites (set the tier)"),
+                   Line2D([], [], marker="o", linestyle="", markersize=8, color=t["stress"], label="Stress suites")]
+        leg = fig.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.01, 0.93), ncol=2, frameon=False,
+                         fontsize=9, labelcolor=t["ink2"], handletextpad=0.3, columnspacing=1.4)
+        leg.set_zorder(5)
+        ax.annotate("core / stress   tier", xy=(1.0, len(ran) - 0.3), xycoords=("axes fraction", "data"),
+                    xytext=(12, 6), textcoords="offset points", va="bottom", fontsize=8.5, color=t["ink2"],
+                    fontweight="bold", annotation_clip=False)
+        if skipped:
+            fig.text(0.015, 0.012, "Not shown (no answered runs, endpoint down): " + ", ".join(skipped),
+                     ha="left", va="bottom", fontsize=8, color=t["ink2"])
+        fig.subplots_adjust(left=0.2, right=0.72, top=1 - 1.25 / fig.get_figheight(),
+                            bottom=(0.75 if skipped else 0.6) / fig.get_figheight())
+        p = out_dir / f"leaderboard_{mode}.png"
+        fig.savefig(p, facecolor=t["surface"])
+        plt.close(fig)
+        paths.append(p)
+    return paths
+
+
 def write_reports(cards: list[dict[str, Any]], results_dir: Path, thresholds: dict[str, Any],
                   dry_run: bool = False, labels: dict[str, str] | None = None,
                   standard_label: str = "") -> list[Path]:
@@ -332,4 +407,5 @@ def write_reports(cards: list[dict[str, Any]], results_dir: Path, thresholds: di
     write_csv(p, summary_rows(cards))
     written.append(p)
     written += write_charts(cards, results_dir / "charts", thresholds)
+    written += write_leaderboard(cards, results_dir / "charts")
     return written
