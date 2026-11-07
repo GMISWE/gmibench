@@ -1,5 +1,7 @@
 # GMI Open Model Standard: cohort summary (2026-11-06)
 
+Scored under **GMI Open Model Standard v1.0**.
+
 ## Overall (sorted by cost per successful task)
 
 | Model | Tier | Size | Pass rate | Hard pass rate | Consistency | TTFT median | Tokens/s | Cost / success | Deployability | Best for |
@@ -15,9 +17,9 @@
 | nemotron-3.5-lightning | Not verified | small | 0.0% | 0.0% | 0.0% | – s | – | – | 3/4 | – |
 | gpt-oss-120b | Not verified | mid | 0.0% | 0.0% | 0.0% | – s | – | – | 4/4 | – |
 
-Pass rate, consistency, TTFT and cost use the core sets (these set the tier). Hard pass rate is the separate stress score over the hard sets.
+Pass rate, consistency, TTFT and cost use the core suites (these set the tier). Hard pass rate is the separate stress score over the stress suites.
 
-## Coding (sorted by cost per successful task)
+## Coding (core: sets the tier; sorted by cost per successful task)
 
 | Model | Size | Status | Pass rate | Consistency | TTFT median | Cost / success | Recommended |
 |---|---|---|---|---|---|---|---|
@@ -32,7 +34,7 @@ Pass rate, consistency, TTFT and cost use the core sets (these set the tier). Ha
 | nemotron-3.5-lightning | small | incomplete | 0.0% | 0.0% | – s | – |  |
 | gpt-oss-120b | mid | incomplete | 0.0% | 0.0% | – s | – |  |
 
-## Tool use (sorted by cost per successful task)
+## Tool use (core: sets the tier; sorted by cost per successful task)
 
 | Model | Size | Status | Pass rate | Consistency | TTFT median | Cost / success | Recommended |
 |---|---|---|---|---|---|---|---|
@@ -44,7 +46,7 @@ Pass rate, consistency, TTFT and cost use the core sets (these set the tier). Ha
 | qwen3.5-27b | small | ok | 98.3% | 95.0% | 2.03 s | $0.00092 |  |
 | qwen3.5-122b-a10b | mid | ok | 100.0% | 100.0% | 0.92 s | $0.00112 | yes |
 
-## Documents (sorted by cost per successful task)
+## Documents (core: sets the tier; sorted by cost per successful task)
 
 | Model | Size | Status | Pass rate | Consistency | TTFT median | Cost / success | Recommended |
 |---|---|---|---|---|---|---|---|
@@ -55,7 +57,7 @@ Pass rate, consistency, TTFT and cost use the core sets (these set the tier). Ha
 
 n/a (not vision-capable): gpt-oss-120b, gemma-4-26b-a4b, deepseek-v4-flash, minimax-m2.5
 
-## Coding (hard) (sorted by cost per successful task)
+## Coding (hard) (stress: separate score; sorted by cost per successful task)
 
 | Model | Size | Status | Pass rate | Consistency | TTFT median | Cost / success | Recommended |
 |---|---|---|---|---|---|---|---|
@@ -70,7 +72,7 @@ n/a (not vision-capable): gpt-oss-120b, gemma-4-26b-a4b, deepseek-v4-flash, mini
 | nemotron-3.5-lightning | small | incomplete | 0.0% | 0.0% | – s | – |  |
 | gpt-oss-120b | mid | incomplete | 0.0% | 0.0% | – s | – |  |
 
-## Tool use (hard) (sorted by cost per successful task)
+## Tool use (hard) (stress: separate score; sorted by cost per successful task)
 
 | Model | Size | Status | Pass rate | Consistency | TTFT median | Cost / success | Recommended |
 |---|---|---|---|---|---|---|---|
@@ -82,7 +84,7 @@ n/a (not vision-capable): gpt-oss-120b, gemma-4-26b-a4b, deepseek-v4-flash, mini
 | qwen3.5-27b | small | ok | 100.0% | 100.0% | 1.67 s | $0.00970 |  |
 | qwen3.5-122b-a10b | mid | ok | 86.7% | 80.0% | 0.92 s | $0.0150 |  |
 
-## Documents (hard) (sorted by cost per successful task)
+## Documents (hard) (stress: separate score; sorted by cost per successful task)
 
 | Model | Size | Status | Pass rate | Consistency | TTFT median | Cost / success | Recommended |
 |---|---|---|---|---|---|---|---|

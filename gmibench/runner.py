@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 import json
 import random
 import threading
@@ -13,12 +12,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
-from . import checkers
 from .client import FakeRateLimitError, FakeTransientError
-from .config import TASKS_DIR, ModelSpec, base_kind
-from .tasks import load_tasks
-from .support_env import SupportEnv
-from .tools import TOOL_SCHEMAS, execute_tool
+from .config import ModelSpec
+from .kinds import kind_of
+from .suites import Suite
 
 _PRINT_LOCK = threading.Lock()
 
@@ -34,7 +31,7 @@ def log(msg: str) -> None:
 
 @dataclass
 class RunSettings:
-    """Run parameters, taken from `thresholds.yaml` -> run, plus CLI overrides."""
+    """Run parameters: the standard's `protocol`, then `settings.yaml` -> run, then CLI overrides."""
 
     runs_per_task: int = 3
     temperature: float = 0.0
@@ -49,11 +46,14 @@ class RunSettings:
     retry_errors: bool = False
     circuit_breaker_errors: int = 8
     dry_run: bool = False
+    manifest_id: str | None = None
 
     @classmethod
-    def from_config(cls, cfg: dict[str, Any], **overrides: Any) -> "RunSettings":
+    def from_config(cls, cfg: dict[str, Any], *more: dict[str, Any], **overrides: Any) -> "RunSettings":
         known = set(cls.__dataclass_fields__)
         vals = {k: v for k, v in (cfg or {}).items() if k in known}
+        for extra in more:
+            vals.update({k: v for k, v in (extra or {}).items() if k in known})
         vals.update({k: v for k, v in overrides.items() if v is not None})
         return cls(**vals)
 
@@ -303,22 +303,16 @@ class _ResendWithReasoning(Exception):
 # --------------------------------------------------------------------------- one task run
 
 
-def _image_message(task: dict[str, Any], tasks_dir: Path) -> list[dict[str, Any]]:
-    data = base64.b64encode((tasks_dir / task["image"]).read_bytes()).decode()
-    # Image first, then text (the common VLM convention). Note: GMI's GLM-5.3-Flash image endpoint
-    # fails at random (~25% on 2026-11-05, either order); the runner's retries absorb that.
-    return [{"role": "user", "content": [
-        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{data}"}},
-        {"type": "text", "text": task["prompt"]},
-    ]}]
-
-
-def _base_record(model: ModelSpec, model_id: str, task_set: str, task: dict[str, Any], run: int,
+def _base_record(model: ModelSpec, model_id: str, suite: Suite, task: dict[str, Any], run: int,
                  settings: RunSettings) -> dict[str, Any]:
     return {
-        "model": model.name, "model_id": model_id, "task_set": task_set, "task_id": task["id"],
+        "model": model.name, "model_id": model_id, "task_set": suite.name, "task_id": task["id"],
         "category": task.get("category"), "run": run, "dry_run": settings.dry_run,
         "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        # What produced this result: lets old results be told apart from new ones.
+        "task_hash": task.get("hash"), "suite_version": suite.version, "kind": suite.kind,
+        "price_in_per_m": model.input_price_per_m, "price_out_per_m": model.output_price_per_m,
+        "manifest_id": settings.manifest_id,
     }
 
 
@@ -333,24 +327,14 @@ def _fill_usage(rec: dict[str, Any], results: list[CallResult], messages_chars: 
     rec["reasoning_tokens"] = sum(x for x in rt if x is not None) if any(x is not None for x in rt) else None
 
 
-def run_single(client: Any, model: ModelSpec, model_id: str, task_set: str, task: dict[str, Any], run: int,
-               settings: RunSettings, quirks: dict[str, bool], tasks_dir: Path = TASKS_DIR) -> dict[str, Any]:
+def run_single(client: Any, model: ModelSpec, model_id: str, suite: Suite, task: dict[str, Any], run: int,
+               settings: RunSettings, quirks: dict[str, bool]) -> dict[str, Any]:
     """Run one task once and return its raw record (never raises for API errors)."""
-    rec = _base_record(model, model_id, task_set, task, run, settings)
-    kind = base_kind(task_set)
-    if kind == "documents":
-        messages = _image_message(task, tasks_dir)
-    else:
-        messages = ([{"role": "system", "content": task["system"]}] if task.get("system") else []) + \
-                   [{"role": "user", "content": task["prompt"]}]
-    tools: list[dict[str, Any]] | None = None
-    run_tool = execute_tool
-    if kind == "tool_use":
-        if task.get("toolset") == "support":
-            env = SupportEnv()  # fresh state per run
-            tools, run_tool = env.schemas, env.execute
-        else:
-            tools = TOOL_SCHEMAS
+    rec = _base_record(model, model_id, suite, task, run, settings)
+    kind = kind_of(suite)
+    messages = kind.messages(task, suite)
+    env = kind.environment(task, suite)  # fresh tool state per run, or None
+    tools: list[dict[str, Any]] | None = env.schemas if env is not None else None
     results: list[CallResult] = []
     retries = waits = 0
     made_calls: list[dict[str, Any]] = []
@@ -377,8 +361,8 @@ def run_single(client: Any, model: ModelSpec, model_id: str, task_set: str, task
                                                 "function": {"name": tc["name"], "arguments": tc["arguments"] or "{}"}})
                 made_calls.append({"name": tc["name"], "arguments": tc["arguments"]})
             messages = messages + [assistant] + [
-                {"role": "tool", "tool_call_id": a["id"], "content": run_tool(a["function"]["name"],
-                                                                               a["function"]["arguments"])}
+                {"role": "tool", "tool_call_id": a["id"], "content": env.execute(a["function"]["name"],
+                                                                                  a["function"]["arguments"])}
                 for a in assistant["tool_calls"]]
         rec["error"] = None
     except APICallFailed as exc:
@@ -402,12 +386,8 @@ def run_single(client: Any, model: ModelSpec, model_id: str, task_set: str, task
 
     if rec["error"]:
         rec["passed"], rec["check"] = False, {"reason": "api_error"}
-    elif kind == "coding":
-        rec["passed"], rec["check"] = checkers.check_coding(task, final, settings.coding_timeout_s)
-    elif kind == "tool_use":
-        rec["passed"], rec["check"] = checkers.check_tool_use(task, made_calls, final)
     else:
-        rec["passed"], rec["check"] = checkers.check_document(task, final)
+        rec["passed"], rec["check"] = kind.check(task, suite, final, made_calls, settings.coding_timeout_s)
     return rec
 
 
@@ -463,30 +443,35 @@ class ResultStore:
                 fh.flush()
 
 
+def is_current(rec: dict[str, Any] | None, task: dict[str, Any]) -> bool:
+    """True if a record was made with the current version of the task."""
+    return rec is not None and (task.get("hash") is None or rec.get("task_hash") == task.get("hash"))
+
+
 def pending_jobs(tasks: list[dict[str, Any]], done: dict[tuple[str, int], dict[str, Any]], runs: int,
                  retry_errors: bool) -> list[tuple[dict[str, Any], int]]:
-    """(task, run) pairs that still need to run."""
+    """(task, run) pairs that still need to run: missing, made with an older task, or (opt-in) API errors."""
     jobs = []
     for run in range(runs):
         for t in tasks:
             prev = done.get((t["id"], run))
-            if prev is None or (retry_errors and prev.get("error")):
+            if not is_current(prev, t) or (retry_errors and prev.get("error")):
                 jobs.append((t, run))
     return jobs
 
 
-def run_model(client: Any, model: ModelSpec, model_id: str, task_sets: list[str], settings: RunSettings,
-              store: ResultStore, tasks_dir: Path = TASKS_DIR) -> dict[str, int]:
-    """Run every applicable task set for one model with `concurrency_per_model` workers."""
+def run_model(client: Any, model: ModelSpec, model_id: str, suites: list[Suite], settings: RunSettings,
+              store: ResultStore) -> dict[str, int]:
+    """Run every applicable suite for one model with `concurrency_per_model` workers."""
     quirks: dict[str, bool] = {}
     counts = {"done": 0, "passed": 0, "errors": 0, "skipped": 0, "not_run": 0}
     breaker = {"streak": 0, "open": False}
     breaker_lock = threading.Lock()
 
-    def job(ts: str, t: dict[str, Any], r: int) -> dict[str, Any] | None:
+    def job(suite: Suite, t: dict[str, Any], r: int) -> dict[str, Any] | None:
         if breaker["open"]:
             return None  # endpoint looks down: leave unrecorded so a later run resumes it
-        rec = run_single(client, model, model_id, ts, t, r, settings, quirks, tasks_dir)
+        rec = run_single(client, model, model_id, suite, t, r, settings, quirks)
         with breaker_lock:
             breaker["streak"] = breaker["streak"] + 1 if rec.get("error") else 0
             if breaker["streak"] >= settings.circuit_breaker_errors and not breaker["open"]:
@@ -495,13 +480,14 @@ def run_model(client: Any, model: ModelSpec, model_id: str, task_sets: list[str]
                     "Stopping this model; re-run later with --retry-errors to resume.")
         return rec
 
-    for ts in task_sets:
+    for suite in suites:
+        ts = suite.name
         if breaker["open"]:
             break
-        if ts not in model.applicable_sets():
+        if not model.applies_to(suite):
             log(f"[{model.name}] {ts}: n/a (model is not vision-capable)")
             continue
-        tasks = load_tasks(ts, tasks_dir)
+        tasks = suite.load_tasks()
         done = store.load(model, ts)
         jobs = pending_jobs(tasks, done, settings.runs_per_task, settings.retry_errors)
         total = len(tasks) * settings.runs_per_task
@@ -512,7 +498,7 @@ def run_model(client: Any, model: ModelSpec, model_id: str, task_sets: list[str]
         log(f"[{model.name}] {ts}: {len(jobs)} runs to do ({total - len(jobs)} already recorded)")
         n = 0
         with ThreadPoolExecutor(max_workers=settings.concurrency_per_model) as pool:
-            futs = {pool.submit(job, ts, t, r): (t, r) for t, r in jobs}
+            futs = {pool.submit(job, suite, t, r): (t, r) for t, r in jobs}
             for fut in as_completed(futs):
                 t, r = futs[fut]
                 try:
@@ -521,7 +507,7 @@ def run_model(client: Any, model: ModelSpec, model_id: str, task_sets: list[str]
                         counts["not_run"] += 1
                         continue
                 except Exception as exc:  # noqa: BLE001 - keep the run going, record the crash
-                    rec = _base_record(model, model_id, ts, t, r, settings)
+                    rec = _base_record(model, model_id, suite, t, r, settings)
                     rec.update({"passed": False, "error": f"harness: {type(exc).__name__}: {exc}",
                                 "check": {"reason": "harness_error"}, "retries": 0, "rate_limit_waits": 0})
                 store.append(model, ts, rec)
@@ -536,13 +522,13 @@ def run_model(client: Any, model: ModelSpec, model_id: str, task_sets: list[str]
     return counts
 
 
-def run_all(client: Any, models: list[ModelSpec], resolved: dict[str, str], task_sets: list[str],
-            settings: RunSettings, results_dir: Path, tasks_dir: Path = TASKS_DIR) -> dict[str, dict[str, int]]:
+def run_all(client: Any, models: list[ModelSpec], resolved: dict[str, str], suites: list[Suite],
+            settings: RunSettings, results_dir: Path) -> dict[str, dict[str, int]]:
     """Run all models in parallel (each with its own worker pool)."""
     store = ResultStore(results_dir)
     out: dict[str, dict[str, int]] = {}
     with ThreadPoolExecutor(max_workers=max(1, len(models))) as pool:
-        futs = {pool.submit(run_model, client, m, resolved[m.name], task_sets, settings, store, tasks_dir): m
+        futs = {pool.submit(run_model, client, m, resolved[m.name], suites, settings, store): m
                 for m in models}
         for fut in as_completed(futs):
             m = futs[fut]

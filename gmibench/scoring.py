@@ -1,7 +1,11 @@
 """Scoring for the GMI Open Model Standard: five dimensions, roll-ups and tiers.
 
 All functions are pure: they take raw run records (dicts as written by the runner),
-model metadata and thresholds, and return plain dicts. This keeps the math testable.
+model metadata and the standard's rules (a plain dict), and return plain dicts.
+
+Suite roles come from the standard (`rules["roles"]`): `core` suites set the tier,
+`stress` suites form a separate stress score, anything else is experimental. If the
+rules have no roles (for example in unit tests), every suite counts as core.
 """
 
 from __future__ import annotations
@@ -13,7 +17,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .checkers import strip_thinking
-from .config import CORE_SETS, HARD_SETS, TASK_SETS, ModelSpec
+from .config import ModelSpec
 
 TIER_RECOMMENDED = "GMI Recommended"
 TIER_PRODUCTION = "GMI Production Ready"
@@ -24,22 +28,41 @@ TIER_NONE = "Not verified"
 # --------------------------------------------------------------------------- loading
 
 
-def load_raw(results_dir: Path, model: ModelSpec) -> dict[str, list[dict[str, Any]]]:
-    """Read raw records for one model, keeping the last record per (task, run)."""
+def load_raw(results_dir: Path, model: ModelSpec,
+             tasks_by_suite: dict[str, list[dict[str, Any]]]) -> dict[str, list[dict[str, Any]]]:
+    """Raw records for one model: the last record per (task, run), made with the current task.
+
+    Records made with an older version of a task (different `task_hash`) are ignored;
+    the runner will run those tasks again.
+    """
     out: dict[str, list[dict[str, Any]]] = {}
-    for ts in TASK_SETS:
+    for ts, tasks in tasks_by_suite.items():
         p = results_dir / "raw" / model.slug / f"{ts}.jsonl"
         if not p.exists():
             continue
+        hashes = {t["id"]: t.get("hash") for t in tasks}
         latest: dict[tuple[str, int], dict[str, Any]] = {}
         for line in p.read_text().splitlines():
             try:
                 rec = json.loads(line)
             except json.JSONDecodeError:
                 continue
+            want = hashes.get(rec["task_id"], "<removed>")
+            if want == "<removed>" or (want is not None and rec.get("task_hash") != want):
+                continue
             latest[(rec["task_id"], int(rec["run"]))] = rec
-        out[ts] = list(latest.values())
+        if latest:
+            out[ts] = list(latest.values())
     return out
+
+
+def roles_of(rules: dict[str, Any], names: Iterable[str]) -> dict[str, str]:
+    """Role per suite name. No roles in the rules means every suite is core."""
+    roles = rules.get("roles")
+    names = list(names)
+    if roles is None:
+        return {n: "core" for n in names}
+    return {n: roles.get(n, "experimental") for n in names}
 
 
 # --------------------------------------------------------------------------- small helpers
@@ -50,13 +73,18 @@ def _median(xs: Iterable[float | None]) -> float | None:
     return statistics.median(vals) if vals else None
 
 
-def run_cost(rec: dict[str, Any], model: ModelSpec) -> float | None:
-    """USD cost of one run from token counts and per-1M prices. None if a price is unknown."""
-    if model.input_price_per_m is None or model.output_price_per_m is None:
+def run_cost(rec: dict[str, Any], model: ModelSpec | None) -> float | None:
+    """USD cost of one run. Uses the prices saved with the run; falls back to models.yaml.
+
+    None if a price is unknown.
+    """
+    pin = rec.get("price_in_per_m", model.input_price_per_m if model else None)
+    pout = rec.get("price_out_per_m", model.output_price_per_m if model else None)
+    if pin is None or pout is None:
         return None
     pt = rec.get("prompt_tokens") or 0
     ct = rec.get("completion_tokens") or 0
-    return pt * model.input_price_per_m / 1e6 + ct * model.output_price_per_m / 1e6
+    return pt * pin / 1e6 + ct * pout / 1e6
 
 
 def tokens_per_second(rec: dict[str, Any]) -> float | None:
@@ -117,7 +145,8 @@ def score_set(records: list[dict[str, Any]], model: ModelSpec, expected_runs: in
         "pass_rate": 100.0 * passed / n if n else None,
         "error_rate": errors / n if n else None,
         "consistency": consistency(records),
-        "tool_call_accuracy": tool_call_accuracy(records) if records and records[0]["task_set"].removesuffix("_hard") == "tool_use" else None,
+        "tool_call_accuracy": (tool_call_accuracy(records)
+                               if any("tool_calls_correct" in (r.get("check") or {}) for r in records) else None),
         "mean_retries_per_task": mean_retries_per_task(records),
         "ttft_median_s": _median(r.get("ttft_s") for r in records if not r.get("error")),
         "tps_median": _median(tokens_per_second(r) for r in records),
@@ -158,46 +187,54 @@ def deployability(model: ModelSpec, thresholds: dict[str, Any]) -> dict[str, boo
 
 
 def score_model(model: ModelSpec, raw: dict[str, list[dict[str, Any]]], tasks_per_set: dict[str, int],
-                runs_per_task: int, thresholds: dict[str, Any]) -> dict[str, Any]:
-    """Score one model across its applicable task sets (no cross-model tier yet)."""
+                runs_per_task: int, rules: dict[str, Any], not_applicable: Iterable[str] = ()) -> dict[str, Any]:
+    """Score one model across the suites in `tasks_per_set` (no cross-model tier yet)."""
+    roles = roles_of(rules, tasks_per_set)
+    na = set(not_applicable)
     sets: dict[str, Any] = {}
-    all_recs: list[dict[str, Any]] = []
-    hard_recs: list[dict[str, Any]] = []
-    for ts in TASK_SETS:
-        if ts not in model.applicable_sets():
-            sets[ts] = {"status": "n/a"}
+    by_role: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for ts in tasks_per_set:
+        if ts in na:
+            sets[ts] = {"status": "n/a", "role": roles[ts]}
             continue
         recs = raw.get(ts, [])
-        sets[ts] = score_set(recs, model, tasks_per_set.get(ts, 0) * runs_per_task)
-        (all_recs if ts in CORE_SETS else hard_recs).extend(recs)
+        sets[ts] = score_set(recs, model, tasks_per_set[ts] * runs_per_task)
+        sets[ts]["role"] = roles[ts]
+        by_role[roles[ts]].extend(recs)
+    core = [n for n, r in roles.items() if r == "core"]
+    stress_names = [n for n, r in roles.items() if r == "stress"]
 
-    overall = score_set(all_recs, model, 0) if all_recs else {}
+    overall = score_set(by_role["core"], model, 0) if by_role["core"] else {}
     overall.pop("status", None)
     overall.pop("tool_call_accuracy", None)
-    overall["tool_call_accuracy"] = sets.get("tool_use", {}).get("tool_call_accuracy")
-    overall["completed_all"] = all(sets[s]["status"] in ("ok", "n/a") for s in CORE_SETS)
+    accs = [sets[n]["tool_call_accuracy"] for n in core if sets[n].get("tool_call_accuracy") is not None]
+    overall["tool_call_accuracy"] = accs[0] if len(accs) == 1 else (statistics.mean(accs) if accs else None)
+    overall["completed_all"] = all(sets[s]["status"] in ("ok", "n/a") for s in core)
     pr = overall.get("pass_rate")
     overall["quality_per_active_b"] = (pr / model.active_params_b) if (pr is not None and model.active_params_b) else None
 
     ran = {k: v for k, v in sets.items()
-           if k in CORE_SETS and v.get("status") in ("ok", "incomplete") and v.get("pass_rate") is not None}
+           if k in core and v.get("status") in ("ok", "incomplete") and v.get("pass_rate") is not None}
 
-    # Stress score: the hard sets, reported separately. It does not affect the tier.
+    # Stress score: reported separately. It does not affect the tier.
     stress: dict[str, Any] = {}
-    if hard_recs:
-        stress = score_set(hard_recs, model, 0)
+    if by_role["stress"]:
+        stress = score_set(by_role["stress"], model, 0)
         stress.pop("status", None)
-        stress["tool_call_accuracy"] = sets.get("tool_use_hard", {}).get("tool_call_accuracy")
-        stress["completed_all"] = all(sets[s]["status"] in ("ok", "n/a") for s in HARD_SETS)
-    best_for = max(ran, key=lambda k: (ran[k]["pass_rate"], -(ran[k]["cost_per_success"] or 1e9))) if ran and any(v["pass_rate"] > 0 for v in ran.values()) else None
+        accs = [sets[n]["tool_call_accuracy"] for n in stress_names
+                if sets[n].get("tool_call_accuracy") is not None]
+        stress["tool_call_accuracy"] = statistics.mean(accs) if accs else None
+        stress["completed_all"] = all(sets[s]["status"] in ("ok", "n/a") for s in stress_names)
+    best_for = (max(ran, key=lambda k: (ran[k]["pass_rate"], -(ran[k]["cost_per_success"] or 1e9)))
+                if ran and any(v["pass_rate"] > 0 for v in ran.values()) else None)
 
     return {
         "name": model.name, "id": model.id, "focus": model.focus, "lab": model.lab,
         "total_params_b": model.total_params_b, "active_params_b": model.active_params_b,
         "license": model.license, "context_length": model.context_length, "precision": model.precision,
         "input_price_per_m": model.input_price_per_m, "output_price_per_m": model.output_price_per_m,
-        "vision": model.vision, "size_class": size_class(model, thresholds),
-        "sets": sets, "overall": overall, "stress": stress, "deployability": deployability(model, thresholds),
+        "vision": model.vision, "size_class": size_class(model, rules),
+        "sets": sets, "overall": overall, "stress": stress, "deployability": deployability(model, rules),
         "best_for": best_for,
     }
 
@@ -240,7 +277,8 @@ def assign_tiers(cards: list[dict[str, Any]], thresholds: dict[str, Any]) -> lis
         c["tier"], c["tier_unmet"] = base_tier(c, thresholds)
         c["recommended_for"] = []
     prod = [c for c in cards if c["tier"] == TIER_PRODUCTION]
-    for ts in CORE_SETS:
+    all_sets = {ts for c in cards for ts in c["sets"]}
+    for ts in sorted(n for n, r in roles_of(thresholds, all_sets).items() if r == "core"):
         groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
         for c in prod:
             s = c["sets"].get(ts, {})
@@ -257,13 +295,19 @@ def assign_tiers(cards: list[dict[str, Any]], thresholds: dict[str, Any]) -> lis
     return cards
 
 
-def score_all(models: list[ModelSpec], results_dir: Path, tasks_per_set: dict[str, int], runs_per_task: int,
-              thresholds: dict[str, Any]) -> list[dict[str, Any]]:
-    """Score every model that has any raw results, then assign tiers."""
+def score_all(models: list[ModelSpec], results_dir: Path, suites: list[Any], runs_per_task: int,
+              rules: dict[str, Any]) -> list[dict[str, Any]]:
+    """Score every model that has any current raw results, then assign tiers.
+
+    `suites` are `Suite` objects in report order.
+    """
+    tasks_by_suite = {s.name: s.load_tasks() for s in suites}
+    tasks_per_set = {n: len(t) for n, t in tasks_by_suite.items()}
     cards = []
     for m in models:
-        raw = load_raw(results_dir, m)
+        raw = load_raw(results_dir, m, tasks_by_suite)
         if not raw:
             continue
-        cards.append(score_model(m, raw, tasks_per_set, runs_per_task, thresholds))
-    return assign_tiers(cards, thresholds)
+        na = [s.name for s in suites if not m.applies_to(s)]
+        cards.append(score_model(m, raw, tasks_per_set, runs_per_task, rules, na))
+    return assign_tiers(cards, rules)

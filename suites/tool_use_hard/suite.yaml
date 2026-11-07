@@ -1,0 +1,8 @@
+title: Tool use (hard)
+version: 2.0.0
+kind: tool_use
+environment: env:SupportEnv
+description: >
+  Support agent for a mock shop: 13 tools, a written refund policy, pagination, flaky tools,
+  prompt injection in order notes, refund history. Checked by replaying the calls and
+  comparing the final state. v1 (3 simple tools) is archived in results/archive/tool_use_hard_v1/.

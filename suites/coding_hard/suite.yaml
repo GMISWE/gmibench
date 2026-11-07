@@ -1,0 +1,6 @@
+title: Coding (hard)
+version: 1.0.0
+kind: coding
+description: >
+  20 hard problems (regex engine, parsers, Sudoku, graph and DP) with performance limits
+  and bans on shortcuts (eval, re, json).

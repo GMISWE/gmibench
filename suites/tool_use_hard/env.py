@@ -26,7 +26,8 @@ import math
 from datetime import date
 from typing import Any, Callable
 
-from .tools import _BIN_OPS, _UNARY_OPS
+from gmibench.checkers import _close, _parse_args, answer_ok, numbers_in, strip_thinking
+from gmibench.tools import _BIN_OPS, _UNARY_OPS
 
 TODAY = date(2026, 11, 6)
 PAGE_SIZE = 3
@@ -304,6 +305,11 @@ class SupportEnv:
 
     schemas = SUPPORT_TOOL_SCHEMAS
 
+    @classmethod
+    def check(cls, task: dict[str, Any], calls: list[dict[str, Any]], final_answer: str) -> tuple[bool, dict[str, Any]]:
+        """Grade a run by its final state (rebuilt from the calls) and its answer."""
+        return check_support(task, calls, final_answer)
+
     def __init__(self) -> None:
         self.orders = copy.deepcopy(ORDERS)
         self.customers = copy.deepcopy(CUSTOMERS)
@@ -486,3 +492,73 @@ def replay(calls: list[dict[str, Any]]) -> SupportEnv:
 
 def days_since(d: str) -> int:
     return (TODAY - date.fromisoformat(d)).days
+
+
+def _same(got: Any, want: Any) -> bool:
+    """Argument match: numbers by value, text case-insensitively."""
+    if isinstance(want, (int, float)):
+        try:
+            return _close(float(got), float(want))
+        except (TypeError, ValueError):
+            return False
+    return str(got if got is not None else "").strip().upper() == str(want).upper()
+
+
+def check_support(task: dict[str, Any], calls: list[dict[str, Any]], final_answer: str) -> tuple[bool, dict[str, Any]]:
+    """Support-desk tasks: rebuild the final state by replaying the calls, then compare.
+
+    Fails on a missing or wrong action, on any extra refund / credit / cancel / approval
+    ticket, and on any attempt of a forbidden call (even one the tool rejected).
+    """
+    exp = task["expected"]
+    env = replay(calls)
+    problems: list[str] = []
+
+    def sums(rows: list[dict[str, Any]], key: str) -> dict[str, float]:
+        out: dict[str, float] = {}
+        for r in rows:
+            out[r[key]] = round(out.get(r[key], 0.0) + r["amount"], 2)
+        return out
+
+    for label, got, want in (("refund", sums(env.refunds, "order_id"), exp.get("refunds") or {}),
+                             ("store_credit", sums(env.credits, "customer_id"), exp.get("store_credits") or {})):
+        for k in sorted(set(got) | set(want)):
+            if k not in want:
+                problems.append(f"unexpected {label} {k} {got[k]:.2f}")
+            elif k not in got or not _close(got[k], float(want[k])):
+                problems.append(f"{label} {k}: got {got.get(k, 0.0):.2f}, want {float(want[k]):.2f}")
+
+    if sorted(env.cancels) != sorted(exp.get("cancels") or []):
+        problems.append(f"cancels {sorted(env.cancels)} != {sorted(exp.get('cancels') or [])}")
+
+    approvals = [t for t in env.tickets if t["category"].strip().lower() == "refund_approval"]
+    unmatched = list(approvals)
+    for want in exp.get("tickets") or []:
+        hit = next((t for t in unmatched if want["order_id"].lower() in t["summary"].lower()
+                    and any(_close(n, float(want["amount"])) for n in numbers_in(t["summary"]))), None)
+        if hit is None:
+            problems.append(f"missing approval ticket for {want['order_id']} ({want['amount']:.2f})")
+        else:
+            unmatched.remove(hit)
+    for t in unmatched:
+        problems.append(f"unexpected approval ticket: {t['summary'][:60]}")
+
+    for f in exp.get("forbid") or []:
+        for c in calls:
+            if c.get("name") != f["name"]:
+                continue
+            args = _parse_args(c.get("arguments"))
+            if all(_same(args.get(k), v) for k, v in f.items() if k != "name"):
+                problems.append(f"forbidden call attempted: {f}")
+                break
+
+    numbers_ok, phrase_ok = answer_ok(exp, strip_thinking(final_answer))
+    state_ok = not problems
+    return state_ok and numbers_ok and phrase_ok, {
+        "state_ok": state_ok,
+        "tool_calls_correct": state_ok,  # feeds the tool-call accuracy metric
+        "problems": problems[:8],
+        "answer_numbers_ok": numbers_ok,
+        "answer_phrase_ok": phrase_ok,
+        "tool_calls": len(calls),
+    }

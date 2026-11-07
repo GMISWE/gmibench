@@ -61,7 +61,8 @@ def test_tool_call_accuracy(model):
 def test_quality_per_active_param(model):
     raw = {"coding": _coding_records(), "tool_use": [make_rec("x", r, True, "tool_use", tool_ok=True)
                                                        for r in range(3)]}
-    card = scoring.score_model(model, raw, {"coding": 2, "tool_use": 1}, 3, {"size_classes": {}})
+    card = scoring.score_model(model, raw, {"coding": 2, "tool_use": 1, "documents": 20}, 3, {"size_classes": {}},
+                               not_applicable=["documents"])
     # overall: 7 passes / 9 runs = 77.78%, / 4B active
     assert card["overall"]["pass_rate"] == pytest.approx(700 / 9)
     assert card["overall"]["quality_per_active_b"] == pytest.approx(700 / 9 / 4)

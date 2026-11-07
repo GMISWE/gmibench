@@ -1,0 +1,104 @@
+{
+  "manifest_id": "legacy-pre-v1.0",
+  "note": "Results recorded 2026-11-05/06 before run manifests existed (git commit cbab518 and earlier working copies). Task fingerprints, suite versions and prices were stamped on 2026-11-06 from the task files and models.yaml of that commit. The task content they ran is identical to standard v1.0.",
+  "standard": "1.0",
+  "git": {
+    "commit": "cbab518",
+    "branch": "main",
+    "dirty": null
+  },
+  "suites": {
+    "coding": {
+      "version": "1.0.0",
+      "fingerprint": "3cb7b868e334",
+      "kind": "coding"
+    },
+    "coding_hard": {
+      "version": "1.0.0",
+      "fingerprint": "0cf6b422ac15",
+      "kind": "coding"
+    },
+    "documents": {
+      "version": "1.0.0",
+      "fingerprint": "2e61c2a31027",
+      "kind": "documents"
+    },
+    "documents_hard": {
+      "version": "1.0.0",
+      "fingerprint": "5f15481c2d22",
+      "kind": "documents"
+    },
+    "tool_use": {
+      "version": "1.0.0",
+      "fingerprint": "d51aef1642ae",
+      "kind": "tool_use"
+    },
+    "tool_use_hard": {
+      "version": "2.0.0",
+      "fingerprint": "437d1a7ee157",
+      "kind": "tool_use"
+    }
+  },
+  "models": [
+    {
+      "name": "nemotron-3.5-super-vl",
+      "id": "nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+      "input_price_per_m": 0.1,
+      "output_price_per_m": 0.5
+    },
+    {
+      "name": "nemotron-3.5-lightning",
+      "id": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16",
+      "input_price_per_m": 0.15,
+      "output_price_per_m": 1.0
+    },
+    {
+      "name": "gpt-oss-120b",
+      "id": "openai/gpt-oss-120b",
+      "input_price_per_m": 0.05,
+      "output_price_per_m": 0.25
+    },
+    {
+      "name": "gemma-4-26b-a4b",
+      "id": "google/gemma-4-26b-a4b-it",
+      "input_price_per_m": 0.13,
+      "output_price_per_m": 0.4
+    },
+    {
+      "name": "glm-5.3-flash",
+      "id": "zai-org/GLM-5.3-Flash",
+      "input_price_per_m": 0.15,
+      "output_price_per_m": 0.5
+    },
+    {
+      "name": "deepseek-v4-flash",
+      "id": "deepseek-ai/DeepSeek-V4-Flash",
+      "input_price_per_m": 0.14,
+      "output_price_per_m": 0.28
+    },
+    {
+      "name": "qwen3.6-35b-a3b",
+      "id": "Qwen/Qwen3.6-35B-A3B",
+      "input_price_per_m": 0.248,
+      "output_price_per_m": 1.485
+    },
+    {
+      "name": "qwen3.5-122b-a10b",
+      "id": "Qwen/Qwen3.5-122B-A10B",
+      "input_price_per_m": 0.4,
+      "output_price_per_m": 3.2
+    },
+    {
+      "name": "qwen3.5-27b",
+      "id": "Qwen/Qwen3.5-27B",
+      "input_price_per_m": 0.3,
+      "output_price_per_m": 2.4
+    },
+    {
+      "name": "minimax-m2.5",
+      "id": "MiniMaxAI/MiniMax-M2.5",
+      "input_price_per_m": 0.3,
+      "output_price_per_m": 1.2
+    }
+  ]
+}

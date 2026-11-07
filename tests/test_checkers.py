@@ -170,25 +170,22 @@ def test_numbers_in_decimal_comma():
 
 # ----------------------------------------------------------------- hard (stress) sets
 
-def test_hard_sets_reference_answers_pass():
-    from gmibench.tasks import load_tasks
-    for t in load_tasks("coding_hard"):
-        ok, d = checkers.check_coding(t, f"```python\n{t['reference_solution']}```")
-        assert ok, (t["id"], d)
-    for t in load_tasks("tool_use_hard"):
-        ok, d = checkers.check_tool_use(t, _calls(t), t["reference_answer"])
-        assert ok, (t["id"], d)
-    for t in load_tasks("documents_hard"):
-        ok, d = checkers.check_document(t, json.dumps(t["expected"]))
-        assert ok, (t["id"], d)
+def test_every_suite_reference_answer_passes(suites):
+    """Each task's reference answer must pass its own checker (the same check `bench.py validate` runs)."""
+    from gmibench.kinds import kind_of
+    for suite in suites.values():
+        kind = kind_of(suite)
+        for t in suite.load_tasks():
+            assert kind.validate(t, suite) == [], (suite.name, t["id"])
 
 
-def test_answer_all_needs_every_group():
-    from gmibench.tasks import load_tasks
-    t = next(x for x in load_tasks("tool_use_hard") if x["id"] == "agent-19")
+def test_answer_all_needs_every_group(suites):
+    suite = suites["tool_use_hard"]
+    env_cls = suite.env_class()
+    t = next(x for x in suite.load_tasks() if x["id"] == "agent-19")
     calls = _calls(t)
-    assert checkers.check_tool_use(t, calls, "O-5602 was already returned.")[0]
-    assert not checkers.check_tool_use(t, calls, "No refund is possible.")[0]
+    assert env_cls.check(t, calls, "O-5602 was already returned.")[0]
+    assert not env_cls.check(t, calls, "No refund is possible.")[0]
 
 
 def test_extract_code_unclosed_fence() -> None:

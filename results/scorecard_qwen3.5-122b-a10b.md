@@ -2,26 +2,28 @@
 
 `Qwen/Qwen3.5-122B-A10B` · Alibaba Qwen · size class: **mid**
 
+Scored under **GMI Open Model Standard v1.0**.
+
 ## Tier: GMI Recommended
 
-Recommended for: Coding, Tool use, Documents (mid models).
+Recommended for: Coding, Documents, Tool use (mid models).
 
 Best for: documents (100.0% pass rate, $0.00101 per successful task).
 
 ## 1. Capability
 
-| Task set | Status | Runs | Pass rate | Consistency |
-|---|---|---|---|---|
-| Coding | ok | 60/60 | 98.3% | 95.0% |
-| Tool use | ok | 60/60 | 100.0% | 100.0% |
-| Documents | ok | 60/60 | 100.0% | 100.0% |
-| Coding (hard) | ok | 60/60 | 85.0% | 65.0% |
-| Tool use (hard) | ok | 60/60 | 86.7% | 80.0% |
-| Documents (hard) | ok | 60/60 | 100.0% | 100.0% |
-| **All core sets (tier)** | | 180 | **99.4%** | 98.3% |
-| **Stress: all hard sets** | | 180 | **90.6%** | 81.7% |
+| Suite | Role | Status | Runs | Pass rate | Consistency |
+|---|---|---|---|---|---|
+| Coding | core | ok | 60/60 | 98.3% | 95.0% |
+| Tool use | core | ok | 60/60 | 100.0% | 100.0% |
+| Documents | core | ok | 60/60 | 100.0% | 100.0% |
+| Coding (hard) | stress | ok | 60/60 | 85.0% | 65.0% |
+| Tool use (hard) | stress | ok | 60/60 | 86.7% | 80.0% |
+| Documents (hard) | stress | ok | 60/60 | 100.0% | 100.0% |
+| **All core suites (tier)** | | | 180 | **99.4%** | 98.3% |
+| **Stress: all stress suites** | | | 180 | **90.6%** | 81.7% |
 
-The tier uses the core sets only. The hard sets are a separate stress score.
+The tier uses the core suites only. Stress suites are a separate score; experimental suites are shown but never count.
 
 ## 2. Efficiency
 

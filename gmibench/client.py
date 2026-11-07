@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 import difflib
 import hashlib
 import json
@@ -10,11 +9,10 @@ import os
 import threading
 import time
 from collections import defaultdict
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Iterator
 
-from .config import TASK_SETS, TASKS_DIR, ModelSpec, base_kind
+from .config import ModelSpec
 
 DEFAULT_BASE_URL = "https://api.gmi-serving.com/v1/"
 
@@ -100,70 +98,44 @@ class FakeClient:
     token usage, tool calls, transient errors and 429s.
     """
 
-    def __init__(self, models: list[ModelSpec], tasks_dir: Path = TASKS_DIR, error_rate: float = 0.02) -> None:
+    def __init__(self, models: list[ModelSpec], suites: list[Any] | None = None, error_rate: float = 0.02) -> None:
+        from .kinds import kind_of
+        from .suites import get_suites
+
         self.error_rate = error_rate
         self.chat = _ns(completions=_FakeCompletions(self))
         # Mirrors `client.models.list().data[i].id` of the real SDK.
         self.models = _ns(list=lambda: _ns(data=[_ns(id=m.id) for m in models]))
-        self._by_prompt: dict[str, dict[str, Any]] = {}
-        self._by_image: dict[str, dict[str, Any]] = {}
+        self._by_key: dict[str, tuple[dict[str, Any], Any]] = {}
         self._counter: dict[tuple[str, str], int] = defaultdict(int)
         self._lock = threading.Lock()
-        for ts in TASK_SETS:
-            path = tasks_dir / f"{ts}.jsonl"
-            if not path.exists():
-                continue
-            for line in path.read_text().splitlines():
-                task = json.loads(line)
-                task["_set"] = base_kind(ts)
-                if base_kind(ts) == "documents":
-                    data = base64.b64encode((tasks_dir / task["image"]).read_bytes()).decode()
-                    self._by_image[data] = task
-                else:
-                    self._by_prompt[task["prompt"]] = task
+        for suite in (suites if suites is not None else get_suites()):
+            kind = kind_of(suite)
+            for task in suite.load_tasks():
+                self._by_key[kind.fake_key(task, suite)] = (task, suite)
 
     # -- helpers
 
-    def _find_task(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
+    def _find_task(self, messages: list[dict[str, Any]]) -> tuple[dict[str, Any], Any]:
         for msg in messages:
             if msg.get("role") != "user":
                 continue
             content = msg["content"]
-            if isinstance(content, str) and content in self._by_prompt:
-                return self._by_prompt[content]
+            if isinstance(content, str) and content in self._by_key:
+                return self._by_key[content]
             if isinstance(content, list):
                 for part in content:
                     if part.get("type") == "image_url":
                         b64 = part["image_url"]["url"].split(",", 1)[1]
-                        if b64 in self._by_image:
-                            return self._by_image[b64]
+                        if b64 in self._by_key:
+                            return self._by_key[b64]
         raise ValueError("fake client: unknown task")
-
-    def _answer(self, model: str, task: dict[str, Any], messages: list[dict[str, Any]],
-                fail: bool) -> tuple[str, list[dict[str, Any]]]:
-        ts = task["_set"]
-        if ts == "coding":
-            code = task["reference_solution"]
-            if fail:
-                code = code.replace("return", "return None and", 1)
-            return f"```python\n{code}```", []
-        if ts == "documents":
-            gt = dict(task["expected"])
-            if fail:
-                gt["total"] = round(gt["total"] + 1.0, 2)
-            return "```json\n" + json.dumps(gt) + "\n```", []
-        # tool use
-        if not any(m.get("role") == "tool" for m in messages):
-            calls = [{"name": c["name"], "arguments": json.dumps(c["args"])} for c in task["reference_calls"]]
-            if fail and _h(model, task["id"], "skip") < 0.5:
-                return "I think the answer is 42.", []
-            return "", calls
-        answer = task["reference_answer"]
-        return ("I could not determine that." if fail else answer), []
 
     def _create(self, *, model: str, messages: list[dict[str, Any]], max_tokens: int = 512,
                 stream: bool = False, **_: Any) -> Iterator[SimpleNamespace]:
-        task = self._find_task(messages)
+        from .kinds import kind_of
+
+        task, suite = self._find_task(messages)
         first_turn = not any(m.get("role") == "assistant" for m in messages)
         with self._lock:
             if first_turn:
@@ -178,9 +150,9 @@ class FakeClient:
         # Mostly task-level outcomes (real models are fairly consistent at temperature 0),
         # plus a little per-run noise so consistency is not always 100%.
         skill = 0.60 + 0.38 * _h(model, "skill")              # per-model pass probability
-        set_bias = 0.15 * (_h(model, task["_set"]) - 0.5)
+        set_bias = 0.15 * (_h(model, suite.name) - 0.5)
         fail = _h(model, task["id"], "fail") > skill + set_bias or _h(model, task["id"], n, "noise") < 0.03
-        content, calls = self._answer(model, task, messages, fail)
+        content, calls = kind_of(suite).fake_answer(task, messages, fail)
         return self._stream(model, messages, content, calls, max_tokens)
 
     def _stream(self, model: str, messages: list[dict[str, Any]], content: str,

@@ -12,6 +12,7 @@ to a model; the dry-run client and the tests use them.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 TOOL_MAX_TOKENS = 4096
@@ -112,3 +113,8 @@ def build_tool_tasks() -> list[dict[str, Any]]:
     ]
     assert len(t) == 20
     return t
+
+
+def build(suite_dir: Path) -> list[dict[str, Any]]:
+    """Suite entry point."""
+    return build_tool_tasks()

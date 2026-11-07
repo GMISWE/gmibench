@@ -1,0 +1,6 @@
+title: Tool use
+version: 1.0.0
+kind: tool_use
+environment: gmibench.tools:BasicToolsEnv
+description: >
+  20 tasks over get_weather, lookup_order and calculate. Checks the calls and the final answer.

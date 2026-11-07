@@ -1,0 +1,6 @@
+title: Documents
+version: 1.0.0
+kind: documents
+description: >
+  20 rendered invoices, receipts, purchase orders and work orders. Extract vendor, date,
+  total and line items as JSON.

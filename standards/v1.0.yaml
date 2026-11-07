@@ -1,0 +1,73 @@
+# GMI Open Model Standard. Released standards are never edited: release a new version instead.
+# suites: role (core sets the tier, stress is a separate score), plus the pinned suite version
+#         and fingerprint. Suites not listed here are experimental.
+standard: '1.0'
+released: '2026-11-06'
+notes: 'First release. Core: coding, tool use, documents (set the tier). Stress: coding_hard, tool_use_hard
+  (support-desk v2), documents_hard. 3 runs per task at temperature 0.'
+suites:
+  coding:
+    role: core
+    version: 1.0.0
+    fingerprint: 3cb7b868e334
+  tool_use:
+    role: core
+    version: 1.0.0
+    fingerprint: d51aef1642ae
+  documents:
+    role: core
+    version: 1.0.0
+    fingerprint: 2e61c2a31027
+  coding_hard:
+    role: stress
+    version: 1.0.0
+    fingerprint: 0cf6b422ac15
+  tool_use_hard:
+    role: stress
+    version: 2.0.0
+    fingerprint: 437d1a7ee157
+  documents_hard:
+    role: stress
+    version: 1.0.0
+    fingerprint: 5f15481c2d22
+protocol:
+  runs_per_task: 3
+  temperature: 0
+  seed: 1234
+  max_tool_turns: 6
+  coding_timeout_s: 10
+tiers:
+  verified:
+    max_error_rate: 0.02
+  production_ready:
+    min_pass_rate: 70
+    min_consistency: 80
+    max_ttft_median_s: 1.5
+  recommended:
+    compare_within: production_ready
+size_classes:
+  basis: total_params_b
+  classes:
+  - name: small
+    max_b: 40
+  - name: mid
+    max_b: 150
+  - name: large
+    max_b: null
+deployability:
+  min_context_tokens: 128000
+  allowed_licenses:
+  - apache-2.0
+  - mit
+  - bsd-2-clause
+  - bsd-3-clause
+  - mpl-2.0
+  - isc
+  - gpl-2.0
+  - gpl-3.0
+  - lgpl-2.1
+  - lgpl-3.0
+  - agpl-3.0
+  - upl-1.0
+  - openmdw-1.0
+  - openmdw-1.1

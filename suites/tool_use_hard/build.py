@@ -1,6 +1,6 @@
 """Hard tool-use tasks (stress set, v2): a support agent under a written policy.
 
-Each task runs against a fresh `SupportEnv` (13 tools, see `support_env.py`). The check is
+Each task runs against a fresh `SupportEnv` (13 tools, see `env.py` in this folder). The check is
 on the final state, rebuilt by replaying the model's calls, plus the final answer:
 
   expected.refunds        {order_id: total USD refunded}. Any other successful refund fails.
@@ -18,9 +18,10 @@ v1 of this set (3 simple tools) was saturated (4 models at 100%). Its results ar
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
-from .support_env import ORDERS, PRODUCTS, CUSTOMERS, SUPPORT_SYSTEM_PROMPT, days_since, exchange_rate
+from suites.tool_use_hard.env import ORDERS, PRODUCTS, CUSTOMERS, SUPPORT_SYSTEM_PROMPT, days_since, exchange_rate
 
 HARD_TOOL_MAX_TOKENS = 8192
 
@@ -229,3 +230,8 @@ def build_tool_hard_tasks() -> list[dict[str, Any]]:
     ]
     assert len(t) == 20
     return t
+
+
+def build(suite_dir: Path) -> list[dict[str, Any]]:
+    """Suite entry point."""
+    return build_tool_hard_tasks()

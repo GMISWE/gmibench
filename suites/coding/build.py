@@ -6,6 +6,7 @@ used by the dry-run client and by our own tests), and hidden assert-based tests.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 CODING_MAX_TOKENS = 16384
@@ -628,3 +629,8 @@ def build_coding_tasks() -> list[dict[str, Any]]:
         })
     assert len(tasks) == 20
     return tasks
+
+
+def build(suite_dir: Path) -> list[dict[str, Any]]:
+    """Suite entry point."""
+    return build_coding_tasks()

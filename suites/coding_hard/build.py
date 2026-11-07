@@ -1,12 +1,13 @@
 """Hard coding tasks (stress set): 20 problems with tight edge cases, performance limits and
-bans on shortcuts (eval, re, json). Same format as `tasks_coding.py`.
+bans on shortcuts (eval, re, json). Same format as `suites/coding/build.py`.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
-from .tasks_coding import PROMPT_TEMPLATE
+from suites.coding.build import PROMPT_TEMPLATE
 
 CODING_HARD_MAX_TOKENS = 32768
 
@@ -1282,3 +1283,8 @@ def build_coding_hard_tasks() -> list[dict[str, Any]]:
         })
     assert len(tasks) == 20
     return tasks
+
+
+def build(suite_dir: Path) -> list[dict[str, Any]]:
+    """Suite entry point."""
+    return build_coding_hard_tasks()

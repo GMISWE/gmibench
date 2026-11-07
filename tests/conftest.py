@@ -10,13 +10,24 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from gmibench.config import ModelSpec, load_thresholds  # noqa: E402
-from gmibench.tasks import load_tasks  # noqa: E402
+from gmibench.config import ModelSpec  # noqa: E402
+from gmibench.standard import load_standard  # noqa: E402
+from gmibench.suites import discover  # noqa: E402
+
+
+def load_tasks(name: str) -> list[dict[str, Any]]:
+    return discover()[name].load_tasks()
 
 
 @pytest.fixture(scope="session")
 def thresholds() -> dict[str, Any]:
-    return load_thresholds()
+    """The rules of standard v1.0 as the plain dict scoring uses (tiers, roles, ...)."""
+    return load_standard("1.0").scoring_dict()
+
+
+@pytest.fixture(scope="session")
+def suites() -> dict[str, Any]:
+    return discover()
 
 
 @pytest.fixture(scope="session")

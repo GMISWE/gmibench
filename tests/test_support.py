@@ -6,11 +6,11 @@ import json
 
 import pytest
 
-from gmibench.checkers import check_tool_use
-from gmibench.support_env import SupportEnv, exchange_rate
-from gmibench.tasks_tooluse_hard import build_tool_hard_tasks
+from suites.tool_use_hard.build import build_tool_hard_tasks
+from suites.tool_use_hard.env import SupportEnv, exchange_rate
 
 TASKS = {t["id"]: t for t in build_tool_hard_tasks()}
+check_tool_use = SupportEnv.check
 
 
 def _calls(*pairs: tuple[str, dict]) -> list[dict]:

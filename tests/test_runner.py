@@ -91,7 +91,7 @@ def test_pending_jobs_resume():
     assert ("b", 0) in [(t["id"], r) for t, r in pending_jobs(tasks, done, 2, retry_errors=True)]
 
 
-def test_dry_run_end_to_end_and_resume(tmp_path, thresholds):
+def test_dry_run_end_to_end_and_resume(tmp_path, thresholds, suites):
     models = [
         ModelSpec(name="fake-vision", id="lab/fake-vision", total_params_b=30, active_params_b=3,
                   license="mit", context_length=200000, precision="FP8", input_price_per_m=0.1,
@@ -103,7 +103,7 @@ def test_dry_run_end_to_end_and_resume(tmp_path, thresholds):
     client = FakeClient(models)
     settings = RunSettings(runs_per_task=2, backoff_base_s=0.0, dry_run=True)
     resolved = {m.name: m.id for m in models}
-    sets = ["coding", "tool_use", "documents"]
+    sets = [suites[n] for n in ("coding", "tool_use", "documents")]
     first = run_all(client, models, resolved, sets, settings, tmp_path)
     assert first["fake-vision"]["done"] == 120 and first["fake-text"]["done"] == 80
 
@@ -111,7 +111,7 @@ def test_dry_run_end_to_end_and_resume(tmp_path, thresholds):
     again = run_all(client, models, resolved, sets, settings, tmp_path)
     assert again["fake-vision"]["done"] == 0 and again["fake-vision"]["skipped"] == 120
 
-    cards = score_all(models, tmp_path, {"coding": 20, "tool_use": 20, "documents": 20}, 2, thresholds)
+    cards = score_all(models, tmp_path, sets, 2, thresholds)
     by = {c["name"]: c for c in cards}
     assert by["fake-text"]["sets"]["documents"]["status"] == "n/a"
     assert by["fake-vision"]["overall"]["completed_all"]
@@ -167,14 +167,14 @@ def test_no_available_endpoints_429_is_an_outage():
     assert classify_error(exc) == "retryable"
 
 
-def test_circuit_breaker_stops_dead_model(tmp_path):
+def test_circuit_breaker_stops_dead_model(tmp_path, suites):
     class Dead:
         chat = SimpleNamespace(completions=SimpleNamespace(create=lambda **kw: (_ for _ in ()).throw(
             FakeTransientError("523"))))
     m = ModelSpec(name="dead", id="x/dead")
     settings = RunSettings(runs_per_task=1, backoff_base_s=0.0, max_api_retries=0, circuit_breaker_errors=3,
                            concurrency_per_model=1)
-    out = run_all(Dead(), [m], {"dead": "x/dead"}, ["coding", "tool_use"], settings, tmp_path)
+    out = run_all(Dead(), [m], {"dead": "x/dead"}, [suites["coding"], suites["tool_use"]], settings, tmp_path)
     assert out["dead"]["done"] == 3 and out["dead"]["errors"] == 3
     assert len(ResultStore(tmp_path).load(m, "coding")) == 3
 

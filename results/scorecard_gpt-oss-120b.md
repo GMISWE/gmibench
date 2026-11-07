@@ -2,6 +2,8 @@
 
 `openai/gpt-oss-120b` · OpenAI · size class: **mid**
 
+Scored under **GMI Open Model Standard v1.0**.
+
 ## Tier: Not verified
 
 Not met for the next tier:
@@ -12,17 +14,17 @@ Best for: not enough data yet.
 
 ## 1. Capability
 
-| Task set | Status | Runs | Pass rate | Consistency |
-|---|---|---|---|---|
-| Coding | incomplete | 11/60 | 0.0% | 0.0% |
-| Tool use | not run | 0/60 | –% | –% |
-| Documents | n/a (no vision) | – | – | – |
-| Coding (hard) | incomplete | 11/60 | 0.0% | 0.0% |
-| Documents (hard) | n/a (no vision) | – | – | – |
-| **All core sets (tier)** | | 11 | **0.0%** | 0.0% |
-| **Stress: all hard sets** | | 11 | **0.0%** | 0.0% |
+| Suite | Role | Status | Runs | Pass rate | Consistency |
+|---|---|---|---|---|---|
+| Coding | core | incomplete | 11/60 | 0.0% | 0.0% |
+| Tool use | core | not run | 0/60 | –% | –% |
+| Documents | core | n/a (no vision) | – | – | – |
+| Coding (hard) | stress | incomplete | 11/60 | 0.0% | 0.0% |
+| Documents (hard) | stress | n/a (no vision) | – | – | – |
+| **All core suites (tier)** | | | 11 | **0.0%** | 0.0% |
+| **Stress: all stress suites** | | | 11 | **0.0%** | 0.0% |
 
-The tier uses the core sets only. The hard sets are a separate stress score.
+The tier uses the core suites only. Stress suites are a separate score; experimental suites are shown but never count.
 
 ## 2. Efficiency
 

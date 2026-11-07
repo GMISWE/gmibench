@@ -2,6 +2,8 @@
 
 `MiniMaxAI/MiniMax-M2.5` · MiniMax · size class: **large**
 
+Scored under **GMI Open Model Standard v1.0**.
+
 ## Tier: GMI Production Ready
 
 Not met for the next tier:
@@ -11,18 +13,18 @@ Best for: tool use (100.0% pass rate, $0.00052 per successful task).
 
 ## 1. Capability
 
-| Task set | Status | Runs | Pass rate | Consistency |
-|---|---|---|---|---|
-| Coding | ok | 60/60 | 91.7% | 80.0% |
-| Tool use | ok | 60/60 | 100.0% | 100.0% |
-| Documents | n/a (no vision) | – | – | – |
-| Coding (hard) | ok | 60/60 | 71.7% | 60.0% |
-| Tool use (hard) | ok | 60/60 | 88.3% | 70.0% |
-| Documents (hard) | n/a (no vision) | – | – | – |
-| **All core sets (tier)** | | 120 | **95.8%** | 90.0% |
-| **Stress: all hard sets** | | 120 | **80.0%** | 65.0% |
+| Suite | Role | Status | Runs | Pass rate | Consistency |
+|---|---|---|---|---|---|
+| Coding | core | ok | 60/60 | 91.7% | 80.0% |
+| Tool use | core | ok | 60/60 | 100.0% | 100.0% |
+| Documents | core | n/a (no vision) | – | – | – |
+| Coding (hard) | stress | ok | 60/60 | 71.7% | 60.0% |
+| Tool use (hard) | stress | ok | 60/60 | 88.3% | 70.0% |
+| Documents (hard) | stress | n/a (no vision) | – | – | – |
+| **All core suites (tier)** | | | 120 | **95.8%** | 90.0% |
+| **Stress: all stress suites** | | | 120 | **80.0%** | 65.0% |
 
-The tier uses the core sets only. The hard sets are a separate stress score.
+The tier uses the core suites only. Stress suites are a separate score; experimental suites are shown but never count.
 
 ## 2. Efficiency
 

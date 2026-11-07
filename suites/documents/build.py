@@ -231,3 +231,8 @@ def build_document_tasks(assets_dir: Path) -> list[dict[str, Any]]:
             "expected": gt,
         })
     return tasks
+
+
+def build(suite_dir: Path) -> list[dict[str, Any]]:
+    """Suite entry point. Renders the PNGs into `<suite_dir>/assets`."""
+    return build_document_tasks(suite_dir / "assets")

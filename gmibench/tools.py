@@ -173,3 +173,23 @@ def execute_tool(name: str, arguments: str | dict[str, Any]) -> str:
         return json.dumps(func(**args))
     except TypeError as exc:
         return json.dumps({"error": f"bad arguments: {exc}"})
+
+
+class BasicToolsEnv:
+    """Environment for the core tool-use suite: stateless weather / order / calculator tools.
+
+    Tool environments share one shape, so a new suite can bring its own:
+      - `schemas`: the OpenAI tool definitions sent to the model
+      - `execute(name, arguments) -> str`: run one call, return the JSON result
+      - classmethod `check(task, calls, final_answer) -> (passed, details)`
+    """
+
+    schemas = TOOL_SCHEMAS
+
+    def execute(self, name: str, arguments: str | dict[str, Any]) -> str:
+        return execute_tool(name, arguments)
+
+    @classmethod
+    def check(cls, task: dict[str, Any], calls: list[dict[str, Any]], final_answer: str) -> tuple[bool, dict[str, Any]]:
+        from .checkers import check_tool_use
+        return check_tool_use(task, calls, final_answer)

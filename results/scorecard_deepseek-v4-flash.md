@@ -2,6 +2,8 @@
 
 `deepseek-ai/DeepSeek-V4-Flash` · DeepSeek · size class: **large**
 
+Scored under **GMI Open Model Standard v1.0**.
+
 ## Tier: GMI Verified
 
 Not met for the next tier:
@@ -11,18 +13,18 @@ Best for: tool use (100.0% pass rate, $0.00026 per successful task).
 
 ## 1. Capability
 
-| Task set | Status | Runs | Pass rate | Consistency |
-|---|---|---|---|---|
-| Coding | ok | 60/60 | 81.7% | 70.0% |
-| Tool use | ok | 60/60 | 100.0% | 100.0% |
-| Documents | n/a (no vision) | – | – | – |
-| Coding (hard) | ok | 60/60 | 63.3% | 45.0% |
-| Tool use (hard) | ok | 60/60 | 100.0% | 100.0% |
-| Documents (hard) | n/a (no vision) | – | – | – |
-| **All core sets (tier)** | | 120 | **90.8%** | 85.0% |
-| **Stress: all hard sets** | | 120 | **81.7%** | 72.5% |
+| Suite | Role | Status | Runs | Pass rate | Consistency |
+|---|---|---|---|---|---|
+| Coding | core | ok | 60/60 | 81.7% | 70.0% |
+| Tool use | core | ok | 60/60 | 100.0% | 100.0% |
+| Documents | core | n/a (no vision) | – | – | – |
+| Coding (hard) | stress | ok | 60/60 | 63.3% | 45.0% |
+| Tool use (hard) | stress | ok | 60/60 | 100.0% | 100.0% |
+| Documents (hard) | stress | n/a (no vision) | – | – | – |
+| **All core suites (tier)** | | | 120 | **90.8%** | 85.0% |
+| **Stress: all stress suites** | | | 120 | **81.7%** | 72.5% |
 
-The tier uses the core sets only. The hard sets are a separate stress score.
+The tier uses the core suites only. Stress suites are a separate score; experimental suites are shown but never count.
 
 ## 2. Efficiency
 

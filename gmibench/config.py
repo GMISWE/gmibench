@@ -1,4 +1,4 @@
-"""Load and validate `models.yaml` and `thresholds.yaml`."""
+"""Load and validate `models.yaml` and `settings.yaml`."""
 
 from __future__ import annotations
 
@@ -12,16 +12,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_MODELS_FILE = ROOT / "models.yaml"
-DEFAULT_THRESHOLDS_FILE = ROOT / "thresholds.yaml"
-TASKS_DIR = ROOT / "tasks"
-CORE_SETS: tuple[str, ...] = ("coding", "tool_use", "documents")
-HARD_SETS: tuple[str, ...] = ("coding_hard", "tool_use_hard", "documents_hard")
-TASK_SETS: tuple[str, ...] = CORE_SETS + HARD_SETS
-
-
-def base_kind(task_set: str) -> str:
-    """'tool_use_hard' -> 'tool_use'. The kind decides messages, tools and checker."""
-    return task_set.removesuffix("_hard")
+DEFAULT_SETTINGS_FILE = ROOT / "settings.yaml"
 
 METADATA_FIELDS: tuple[str, ...] = (
     "lab",
@@ -60,9 +51,10 @@ class ModelSpec:
         """Filesystem-safe name used for result folders and file names."""
         return self.name.replace("/", "_")
 
-    def applicable_sets(self) -> list[str]:
-        """Task sets this model runs. Documents need vision."""
-        return [s for s in TASK_SETS if base_kind(s) != "documents" or self.vision]
+    def applies_to(self, suite: Any) -> bool:
+        """Whether this model runs a suite (vision suites need `vision: true`)."""
+        from .kinds import get_kind
+        return self.vision or not get_kind(suite.kind).needs_vision
 
     def missing_fields(self) -> list[str]:
         """Metadata fields that are still `null`."""
@@ -90,9 +82,9 @@ def load_models(path: Path = DEFAULT_MODELS_FILE, warn: bool = True) -> list[Mod
     return models
 
 
-def load_thresholds(path: Path = DEFAULT_THRESHOLDS_FILE) -> dict[str, Any]:
-    """Parse the thresholds file."""
-    return yaml.safe_load(path.read_text())
+def load_settings(path: Path = DEFAULT_SETTINGS_FILE) -> dict[str, Any]:
+    """Parse `settings.yaml` (run knobs and cost-estimate assumptions)."""
+    return yaml.safe_load(path.read_text()) or {}
 
 
 def select_models(models: list[ModelSpec], selector: str) -> list[ModelSpec]:
@@ -111,22 +103,6 @@ def select_models(models: list[ModelSpec], selector: str) -> list[ModelSpec]:
             raise SystemExit(f"Unknown model '{w}'. Choose from: {choices}")
         picked.extend(x for x in match if x not in picked)
     return picked
-
-
-def select_task_sets(selector: str) -> list[str]:
-    """Pick task sets from a comma list, or `all` / `core` / `hard`."""
-    key = selector.strip().lower()
-    if key == "all":
-        return list(TASK_SETS)
-    if key == "core":
-        return list(CORE_SETS)
-    if key == "hard":
-        return list(HARD_SETS)
-    sets = [s.strip() for s in selector.split(",") if s.strip()]
-    for s in sets:
-        if s not in TASK_SETS:
-            raise SystemExit(f"Unknown task set '{s}'. Choose from: {', '.join(TASK_SETS)}")
-    return sets
 
 
 def load_dotenv(path: Path = ROOT / ".env") -> None:

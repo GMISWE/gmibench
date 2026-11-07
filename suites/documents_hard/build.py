@@ -13,7 +13,7 @@ from typing import Any
 import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 
-from .tasks_documents import DOC_MAX_TOKENS, ITEMS, PROMPT, _fmt_date, _make_items, _money, _render
+from suites.documents.build import DOC_MAX_TOKENS, ITEMS, PROMPT, _fmt_date, _make_items, _money, _render
 
 SEED = 20261106
 
@@ -145,3 +145,8 @@ def build_document_hard_tasks(assets_dir: Path) -> list[dict[str, Any]]:
             "expected": gt,
         })
     return tasks
+
+
+def build(suite_dir: Path) -> list[dict[str, Any]]:
+    """Suite entry point. Renders the PNGs into `<suite_dir>/assets`."""
+    return build_document_hard_tasks(suite_dir / "assets")

@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      MPLCONFIGDIR: /tmp/mpl
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Unit tests
+        run: pytest -q
+      - name: Validate suites, task hashes, reference answers and standards
+        run: python bench.py validate
+      - name: build.py and tasks.jsonl agree
+        run: python bench.py generate --check
+      - name: Committed results score under the latest standard
+        run: python bench.py score
+      - name: Offline end-to-end run (fake client, no API key)
+        run: |
+          python bench.py run --dry-run --suites all --runs 1 --yes
+          python bench.py report --dry-run

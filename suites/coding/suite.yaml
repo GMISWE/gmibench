@@ -1,0 +1,6 @@
+title: Coding
+version: 1.0.0
+kind: coding
+description: >
+  20 Python functions (strings, math, data structures, algorithms, parsing).
+  The model's code runs against hidden unit tests in a subprocess.

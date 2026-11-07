@@ -2,57 +2,37 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
-from .config import TASKS_DIR, ModelSpec, base_kind
+from .config import ModelSpec
+from .kinds import kind_of
 from .runner import ResultStore, RunSettings, pending_jobs
-from .tasks import load_tasks
-from .support_env import SUPPORT_TOOL_SCHEMAS
-from .tools import TOOL_SCHEMAS
+from .suites import Suite
 
 
-def estimate(models: list[ModelSpec], task_sets: list[str], settings: RunSettings, results_dir: Path,
-             cfg: dict[str, Any], tasks_dir: Path = TASKS_DIR) -> list[dict[str, Any]]:
+def estimate(models: list[ModelSpec], suites: list[Suite], settings: RunSettings, results_dir: Path,
+             cfg: dict[str, Any]) -> list[dict[str, Any]]:
     """Per model: pending runs, estimated tokens and cost (typical and upper bound).
 
-    Only runs that are not yet recorded are counted, so a resumed run shows what is left.
+    Only runs that are not yet recorded (for the current task versions) are counted,
+    so a resumed run shows what is left.
     """
-    cpt = cfg.get("chars_per_token", 4)
-    img = cfg.get("image_tokens", 1500)
-    frac = cfg.get("expected_output_fraction", 0.35)
-    turns = cfg.get("tool_turns_estimate", 3)
-    tool_tokens_basic = len(json.dumps(TOOL_SCHEMAS)) // cpt
-    tool_tokens_support = len(json.dumps(SUPPORT_TOOL_SCHEMAS)) // cpt
     store = ResultStore(results_dir)
     rows = []
     for m in models:
         jobs_n = 0
         tin = tout_typ = tout_max = 0.0
-        for ts in task_sets:
-            if ts not in m.applicable_sets():
+        for suite in suites:
+            if not m.applies_to(suite):
                 continue
-            tasks = load_tasks(ts, tasks_dir)
-            jobs = pending_jobs(tasks, store.load(m, ts), settings.runs_per_task, settings.retry_errors)
+            kind = kind_of(suite)
+            jobs = pending_jobs(suite.load_tasks(), store.load(m, suite.name), settings.runs_per_task,
+                                settings.retry_errors)
             jobs_n += len(jobs)
             for t, _ in jobs:
-                base = (len(t["prompt"]) + len(t.get("system", ""))) // cpt
-                if base_kind(ts) == "documents":
-                    tin += base + img
-                    tout_typ += frac * t["max_tokens"]
-                    tout_max += t["max_tokens"]
-                elif base_kind(ts) == "tool_use":
-                    support = t.get("toolset") == "support"
-                    tool_tokens = tool_tokens_support if support else tool_tokens_basic
-                    n = 2 * turns if support else turns
-                    tin += n * (base + tool_tokens) + 250 * n * (n - 1) / 2
-                    tout_typ += n * frac * t["max_tokens"] / 4
-                    tout_max += n * t["max_tokens"]
-                else:
-                    tin += base
-                    tout_typ += frac * t["max_tokens"]
-                    tout_max += t["max_tokens"]
+                a, b, c = kind.estimate(t, suite, cfg)
+                tin, tout_typ, tout_max = tin + a, tout_typ + b, tout_max + c
         pin, pout = m.input_price_per_m, m.output_price_per_m
         priced = pin is not None and pout is not None
         rows.append({

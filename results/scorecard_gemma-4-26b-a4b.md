@@ -2,6 +2,8 @@
 
 `google/gemma-4-26b-a4b-it` · Google · size class: **small**
 
+Scored under **GMI Open Model Standard v1.0**.
+
 ## Tier: GMI Recommended
 
 Recommended for: Coding, Tool use (small models).
@@ -10,18 +12,18 @@ Best for: coding (100.0% pass rate, $0.00012 per successful task).
 
 ## 1. Capability
 
-| Task set | Status | Runs | Pass rate | Consistency |
-|---|---|---|---|---|
-| Coding | ok | 60/60 | 100.0% | 100.0% |
-| Tool use | ok | 60/60 | 100.0% | 100.0% |
-| Documents | n/a (no vision) | – | – | – |
-| Coding (hard) | ok | 60/60 | 93.3% | 90.0% |
-| Tool use (hard) | ok | 60/60 | 88.3% | 80.0% |
-| Documents (hard) | n/a (no vision) | – | – | – |
-| **All core sets (tier)** | | 120 | **100.0%** | 100.0% |
-| **Stress: all hard sets** | | 120 | **90.8%** | 85.0% |
+| Suite | Role | Status | Runs | Pass rate | Consistency |
+|---|---|---|---|---|---|
+| Coding | core | ok | 60/60 | 100.0% | 100.0% |
+| Tool use | core | ok | 60/60 | 100.0% | 100.0% |
+| Documents | core | n/a (no vision) | – | – | – |
+| Coding (hard) | stress | ok | 60/60 | 93.3% | 90.0% |
+| Tool use (hard) | stress | ok | 60/60 | 88.3% | 80.0% |
+| Documents (hard) | stress | n/a (no vision) | – | – | – |
+| **All core suites (tier)** | | | 120 | **100.0%** | 100.0% |
+| **Stress: all stress suites** | | | 120 | **90.8%** | 85.0% |
 
-The tier uses the core sets only. The hard sets are a separate stress score.
+The tier uses the core suites only. Stress suites are a separate score; experimental suites are shown but never count.
 
 ## 2. Efficiency
 

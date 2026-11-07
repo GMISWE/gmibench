@@ -2,26 +2,28 @@
 
 `zai-org/GLM-5.3-Flash` · Zhipu AI (Z.ai) · size class: **large**
 
+Scored under **GMI Open Model Standard v1.0**.
+
 ## Tier: GMI Recommended
 
-Recommended for: Coding, Tool use, Documents (large models).
+Recommended for: Coding, Documents, Tool use (large models).
 
 Best for: tool use (100.0% pass rate, $0.00021 per successful task).
 
 ## 1. Capability
 
-| Task set | Status | Runs | Pass rate | Consistency |
-|---|---|---|---|---|
-| Coding | ok | 60/60 | 91.7% | 85.0% |
-| Tool use | ok | 60/60 | 100.0% | 100.0% |
-| Documents | ok | 60/60 | 98.3% | 95.0% |
-| Coding (hard) | ok | 60/60 | 83.3% | 75.0% |
-| Tool use (hard) | ok | 60/60 | 85.0% | 85.0% |
-| Documents (hard) | ok | 60/60 | 100.0% | 100.0% |
-| **All core sets (tier)** | | 180 | **96.7%** | 93.3% |
-| **Stress: all hard sets** | | 180 | **89.4%** | 86.7% |
+| Suite | Role | Status | Runs | Pass rate | Consistency |
+|---|---|---|---|---|---|
+| Coding | core | ok | 60/60 | 91.7% | 85.0% |
+| Tool use | core | ok | 60/60 | 100.0% | 100.0% |
+| Documents | core | ok | 60/60 | 98.3% | 95.0% |
+| Coding (hard) | stress | ok | 60/60 | 83.3% | 75.0% |
+| Tool use (hard) | stress | ok | 60/60 | 85.0% | 85.0% |
+| Documents (hard) | stress | ok | 60/60 | 100.0% | 100.0% |
+| **All core suites (tier)** | | | 180 | **96.7%** | 93.3% |
+| **Stress: all stress suites** | | | 180 | **89.4%** | 86.7% |
 
-The tier uses the core sets only. The hard sets are a separate stress score.
+The tier uses the core suites only. Stress suites are a separate score; experimental suites are shown but never count.
 
 ## 2. Efficiency
 
