@@ -70,6 +70,78 @@ def test_quality_per_active_param(model):
     assert card["sets"]["documents"]["status"] == "n/a"
 
 
+@pytest.mark.parametrize("runs", [
+    [0, 1, 3], [1, 2, 3], [-1, 0, 1], [0, 0, 1], [0, 1, None],
+])
+def test_completion_requires_each_run_index(model, thresholds, runs):
+    raw = {"coding": [make_rec("t1", r, True) for r in runs]}
+    card = scoring.score_model(model, raw, {"coding": 1}, 3, thresholds)
+    assert card["sets"]["coding"]["status"] == "incomplete"
+    assert card["overall"]["completed_all"] is False
+    assert scoring.base_tier(card, thresholds)[0] == scoring.TIER_NONE
+
+
+def test_extra_runs_cannot_replace_missing_tasks(model, thresholds, suites):
+    applicable = [suites[n] for n in ("coding", "tool_use")]
+    raw = {s.name: [make_rec(t["id"], r, True, s.name)
+                   for t in s.load_tasks()[:15] for r in range(4)]
+           for s in applicable}
+    card = scoring.score_model(model, raw, {"coding": 20, "tool_use": 20, "documents": 20},
+                               3, thresholds, ["documents"])
+    assert all(card["sets"][s.name]["runs"] == 60 for s in applicable)
+    assert card["overall"]["completed_all"] is False
+    assert scoring.base_tier(card, thresholds)[0] == scoring.TIER_NONE
+    assert card["sets"]["documents"]["status"] == "n/a"
+
+
+@pytest.mark.parametrize("runs", [[0, 1, 2], [0, 1, 2, 3], [0, 1, 2, 2]])
+def test_complete_coverage_allows_extra_runs(model, thresholds, runs):
+    raw = {"coding": [make_rec(t, r, True) for t in ("t1", "t2") for r in runs]}
+    card = scoring.score_model(model, raw, {"coding": 2, "documents": 20}, 3, thresholds, ["documents"])
+    assert card["overall"]["completed_all"] is True
+    assert scoring.base_tier(card, thresholds)[0] == scoring.TIER_PRODUCTION
+
+
+def test_completion_uses_required_task_identities(model, thresholds):
+    raw = {"coding": [make_rec(t, r, True) for t in ("t1", "unexpected") for r in range(3)]}
+    card = scoring.score_model(model, raw, {"coding": 2}, 3, thresholds,
+                               task_ids_per_set={"coding": ["t1", "t2"]})
+    assert card["overall"]["completed_all"] is False
+    raw["coding"].extend(make_rec("t2", r, True) for r in range(3))
+    card = scoring.score_model(model, raw, {"coding": 2}, 3, thresholds,
+                               task_ids_per_set={"coding": ["t1", "t2"]})
+    assert card["overall"]["completed_all"] is True
+
+
+@pytest.mark.parametrize("task_count,runs,complete", [(15, 4, False), (20, 3, True), (20, 4, True)])
+@pytest.mark.parametrize("vision", [False, True])
+def test_score_all_requires_current_task_run_coverage(tmp_path, model, thresholds, suites,
+                                                    task_count, runs, complete, vision):
+    from gmibench.runner import ResultStore
+
+    model.vision = vision
+    selected = [suites[n] for n in ("coding", "tool_use", "documents")]
+    store = ResultStore(tmp_path)
+    for suite in selected:
+        if not model.applies_to(suite):
+            continue
+        for task in suite.load_tasks()[:task_count]:
+            for run in range(runs):
+                rec = make_rec(task["id"], run, True, suite.name)
+                rec["task_hash"] = task["hash"]
+                store.append(model, suite.name, rec)
+    card, = scoring.score_all([model], tmp_path, selected, 3, thresholds)
+    assert card["overall"]["completed_all"] is complete
+    assert (card["tier"] != scoring.TIER_NONE) is complete
+    expected_status = ("ok" if complete else "incomplete") if vision else "n/a"
+    assert card["sets"]["documents"]["status"] == expected_status
+
+
+def test_score_set_duplicates_do_not_complete(model):
+    records = [make_rec("t1", 0, True)] * 3
+    assert scoring.score_set(records, model, 3)["status"] == "incomplete"
+
+
 def test_deployability(model, thresholds):
     assert all(scoring.deployability(model, thresholds).values())
     m = copy.copy(model)

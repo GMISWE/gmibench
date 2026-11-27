@@ -130,15 +130,27 @@ def tool_call_accuracy(records: list[dict[str, Any]]) -> float | None:
 # --------------------------------------------------------------------------- per set / per model
 
 
-def score_set(records: list[dict[str, Any]], model: ModelSpec, expected_runs: int) -> dict[str, Any]:
-    """Metrics for one model on one task set."""
+def score_set(records: list[dict[str, Any]], model: ModelSpec, expected_runs: int,
+              required_runs: Iterable[tuple[str, int]] | None = None) -> dict[str, Any]:
+    """Metrics for one model on one task set.
+
+    Completion requires the specified (task, run) pairs, not just enough records.
+    Count-only callers infer a balanced, zero-based run grid from the recorded task IDs.
+    """
     n = len(records)
+    if required_runs is None:
+        ids = {r["task_id"] for r in records}
+        runs = (expected_runs + len(ids) - 1) // len(ids) if ids else 0
+        required_runs = {(t, r) for t in ids for r in range(runs)}
+    required = set(required_runs)
+    recorded = {(r["task_id"], r.get("run")) for r in records if type(r.get("run")) is int}
+    complete = expected_runs > 0 and len(required) == expected_runs and required <= recorded
     passed = sum(bool(r.get("passed")) for r in records)
     errors = sum(bool(r.get("error")) for r in records)
     costs = [run_cost(r, model) for r in records]
     cost = None if any(c is None for c in costs) else sum(c for c in costs if c is not None)
     return {
-        "status": "ok" if n >= expected_runs and expected_runs > 0 else ("incomplete" if n else "not run"),
+        "status": "ok" if complete else ("incomplete" if n else "not run"),
         "runs": n,
         "expected_runs": expected_runs,
         "passed_runs": passed,
@@ -188,8 +200,13 @@ def deployability(model: ModelSpec, thresholds: dict[str, Any]) -> dict[str, boo
 
 
 def score_model(model: ModelSpec, raw: dict[str, list[dict[str, Any]]], tasks_per_set: dict[str, int],
-                runs_per_task: int, rules: dict[str, Any], not_applicable: Iterable[str] = ()) -> dict[str, Any]:
-    """Score one model across the suites in `tasks_per_set` (no cross-model tier yet)."""
+                runs_per_task: int, rules: dict[str, Any], not_applicable: Iterable[str] = (),
+                *, task_ids_per_set: dict[str, Iterable[str]] | None = None) -> dict[str, Any]:
+    """Score one model across the suites in `tasks_per_set` (no cross-model tier yet).
+
+    Pass task IDs when available. Otherwise IDs are inferred from raw records, and
+    their count must match `tasks_per_set`; each must cover runs 0..runs_per_task-1.
+    """
     roles = roles_of(rules, tasks_per_set)
     na = set(not_applicable)
     sets: dict[str, Any] = {}
@@ -199,7 +216,9 @@ def score_model(model: ModelSpec, raw: dict[str, list[dict[str, Any]]], tasks_pe
             sets[ts] = {"status": "n/a", "role": roles[ts]}
             continue
         recs = raw.get(ts, [])
-        sets[ts] = score_set(recs, model, tasks_per_set[ts] * runs_per_task)
+        ids = task_ids_per_set[ts] if task_ids_per_set is not None else {r["task_id"] for r in recs}
+        required = {(t, r) for t in ids for r in range(runs_per_task)}
+        sets[ts] = score_set(recs, model, tasks_per_set[ts] * runs_per_task, required)
         sets[ts]["role"] = roles[ts]
         by_role[roles[ts]].extend(recs)
     core = [n for n, r in roles.items() if r == "core"]
@@ -308,6 +327,7 @@ def score_all(models: list[ModelSpec], results_dir: Path, suites: list[Any], run
     """
     tasks_by_suite = {s.name: s.load_tasks() for s in suites}
     tasks_per_set = {n: len(t) for n, t in tasks_by_suite.items()}
+    task_ids_per_set = {n: [t["id"] for t in tasks] for n, tasks in tasks_by_suite.items()}
     cards = []
     scored: list[ModelSpec] = []
     for m in models:
@@ -315,7 +335,8 @@ def score_all(models: list[ModelSpec], results_dir: Path, suites: list[Any], run
         if not raw:
             continue
         na = [s.name for s in suites if not m.applies_to(s)]
-        card = score_model(m, raw, tasks_per_set, runs_per_task, rules, na)
+        card = score_model(m, raw, tasks_per_set, runs_per_task, rules, na,
+                           task_ids_per_set=task_ids_per_set)
         card["platform"] = platform_notes(results_dir, m, tasks_by_suite, raw)
         cards.append(card)
         scored.append(m)
