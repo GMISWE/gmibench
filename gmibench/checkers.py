@@ -97,7 +97,7 @@ def _parse_args(arguments: Any) -> dict[str, Any]:
 
 
 def _close(a: float, b: float, tol: float = NUM_TOL_ABS) -> bool:
-    return abs(a - b) <= tol or abs(a - b) <= 1e-6 * max(abs(a), abs(b))
+    return abs(a - b) <= tol
 
 
 def call_matches(expected: dict[str, Any], actual: dict[str, Any]) -> bool:
