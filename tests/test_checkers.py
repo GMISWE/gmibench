@@ -111,6 +111,37 @@ def test_call_matches_expression_value(expr, ok):
     assert checkers.call_matches(want, {"name": "calculate", "arguments": json.dumps({"expression": expr})}) is ok
 
 
+@pytest.mark.parametrize("wrong_call,wrong_answer", [(True, False), (False, True), (True, True)])
+def test_calculator_large_value_uses_absolute_tolerance(tool_tasks, wrong_call, wrong_answer):
+    task = next(t for t in tool_tasks if t["id"] == "tool-05")
+    calls = [{"name": "calculate", "arguments": json.dumps({
+        "expression": "1234*5678+6" if wrong_call else "1234*5678",
+    })}]
+    answer = "7006658" if wrong_answer else task["reference_answer"]
+    passed, details = checkers.check_tool_use(task, calls, answer)
+    assert details["tool_calls_correct"] is not wrong_call
+    assert details["answer_numbers_ok"] is not wrong_answer
+    assert not passed
+
+
+@pytest.mark.parametrize("expression,answer,passed", [
+    ("10/3", "3.33", True), ("10/3", "3,33", True),
+    ("10/3+0.005", "3.338", True), ("10/3+0.02", "3.33", False),
+    ("10/3", "3.35", False), ("1e309", "3.33", False),
+])
+def test_calculator_decimal_rounding_and_nonfinite(expression, answer, passed):
+    task = {"expected": {"calls": [{"name": "calculate", "args": {"expression_value": 10 / 3}}],
+                         "answer_numbers": [10 / 3]}}
+    calls = [{"name": "calculate", "arguments": json.dumps({"expression": expression})}]
+    assert checkers.check_tool_use(task, calls, answer)[0] is passed
+
+
+@pytest.mark.parametrize("value", [float("inf"), float("-inf"), float("nan")])
+def test_numeric_comparison_rejects_nonfinite(value):
+    assert not checkers._close(value, 7006652)
+    assert not checkers._close(7006652, value)
+
+
 def test_numbers_in_handles_commas():
     assert 7006652 in checkers.numbers_in("The result is 7,006,652.")
     assert 1628.89 in checkers.numbers_in("$1,628.89")
