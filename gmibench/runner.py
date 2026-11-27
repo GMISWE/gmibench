@@ -279,7 +279,11 @@ def call_with_retries(client: Any, model_id: str, messages: list[dict[str, Any]]
                 if "stream_options" in text and not quirks.get("no_stream_usage"):
                     quirks["no_stream_usage"] = True
                     continue
-                if "reasoning_content" in text and not quirks.get("send_reasoning"):
+                if "reasoning_content" in text and any(
+                    m.get("role") == "assistant" and "reasoning_content" not in m for m in messages
+                ):
+                    # Another run may already have learned the quirk, but this
+                    # conversation still needs its earlier assistant turns repaired.
                     quirks["send_reasoning"] = True
                     raise _ResendWithReasoning() from exc
                 raise APICallFailed(msg, retries, waits) from exc
@@ -354,7 +358,7 @@ def run_single(client: Any, model: ModelSpec, model_id: str, suite: Suite, task:
             if not tools or not res.tool_calls:
                 break
             assistant: dict[str, Any] = {"role": "assistant", "content": res.content or None, "tool_calls": []}
-            if quirks.get("send_reasoning") and res.reasoning:
+            if quirks.get("send_reasoning"):
                 assistant["reasoning_content"] = res.reasoning
             for i, tc in enumerate(res.tool_calls):
                 tc_id = tc["id"] or f"call_{turn}_{i}"

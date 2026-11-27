@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
 
 import pytest
@@ -9,7 +12,7 @@ import pytest
 from gmibench.client import FakeClient, FakeRateLimitError, FakeTransientError
 from gmibench.config import ModelSpec
 from gmibench.runner import (APICallFailed, ResultStore, RunSettings, call_with_retries, classify_error,
-                             pending_jobs, retry_after_seconds, run_all)
+                             pending_jobs, retry_after_seconds, run_all, run_single)
 from gmibench.scoring import score_all
 
 
@@ -199,3 +202,85 @@ def test_mid_stream_error_retries_without_streaming():
     res, retries, _ = call_with_retries(c, "m", [], 10, _settings(), None, {}, sleep=lambda s: None)
     assert res.content == "ok" and not res.streamed and retries == 1
     assert calls[0].get("stream") and not calls[1].get("stream")
+
+
+class _ReasoningClient:
+    """Require echoed reasoning; hold B's rejection until A has repaired its history."""
+
+    def __init__(self, task, *, parallel=False, reject_repaired=False, reasoning="Look up Paris"):
+        self.task = task
+        self.reject_repaired = reject_repaired
+        self.reasoning = reasoning
+        self.barrier = threading.Barrier(2, timeout=5) if parallel else None
+        self.repaired = threading.Event()
+        self.lock = threading.Lock()
+        self.workers = {}
+        self.calls = []
+        self.chat = SimpleNamespace(completions=SimpleNamespace(create=self._create))
+
+    def _create(self, **kw):
+        messages = kw["messages"]
+        with self.lock:
+            worker = self.workers.setdefault(threading.get_ident(), len(self.workers))
+            self.calls.append((worker, messages))
+        assistants = [m for m in messages if m["role"] == "assistant"]
+        if not assistants:
+            call = self.task["reference_calls"][0]
+            tc = SimpleNamespace(index=0, id="c1", function=SimpleNamespace(
+                name=call["name"], arguments=json.dumps(call["args"])))
+            delta = SimpleNamespace(content=None, reasoning_content=self.reasoning, tool_calls=[tc])
+            finish = "tool_calls"
+        elif "reasoning_content" not in assistants[0]:
+            if self.barrier:
+                self.barrier.wait()
+                if worker == 1:
+                    assert self.repaired.wait(5), "A did not repair its conversation"
+            raise _BadRequest("reasoning_content is required on assistant messages")
+        else:
+            assert assistants[0]["reasoning_content"] == self.reasoning
+            self.repaired.set()
+            if self.reject_repaired:
+                raise _BadRequest("reasoning_content is still rejected")
+            delta = SimpleNamespace(content=self.task["reference_answer"], tool_calls=None)
+            finish = "stop"
+        return iter([SimpleNamespace(choices=[SimpleNamespace(delta=delta, finish_reason=finish)], usage=None)])
+
+
+@pytest.mark.parametrize("reject_repaired", [False, True])
+def test_parallel_runs_repair_their_own_reasoning(model, suites, reject_repaired):
+    suite = suites["tool_use"]
+    task = next(t for t in suite.load_tasks() if t["id"] == "tool-01")
+    client = _ReasoningClient(task, parallel=True, reject_repaired=reject_repaired)
+    quirks = {}
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(run_single, client, model, model.id, suite, task, r, _settings(), quirks)
+                   for r in range(2)]
+        records = [f.result(timeout=10) for f in futures]
+    assert quirks["send_reasoning"]
+    assert len(client.calls) == 6  # initial, missing reasoning, repaired: once per worker
+    assert all(r["tool_call_count"] == 1 for r in records)
+    if reject_repaired:
+        assert all(r["error"] and not r["passed"] for r in records)
+    else:
+        assert all(r["error"] is None and r["passed"] for r in records)
+
+
+@pytest.mark.parametrize("reasoning", ["Look up Paris", ""])
+@pytest.mark.parametrize("reject_repaired", [False, True])
+def test_single_run_reasoning_repair_terminates(model, suites, reasoning, reject_repaired):
+    suite = suites["tool_use"]
+    task = next(t for t in suite.load_tasks() if t["id"] == "tool-01")
+    client = _ReasoningClient(task, reasoning=reasoning, reject_repaired=reject_repaired)
+    rec = run_single(client, model, model.id, suite, task, 0, _settings(), {})
+    assert len(client.calls) == 3
+    assert rec["passed"] is not reject_repaired
+    assert bool(rec["error"]) is reject_repaired
+
+
+def test_known_reasoning_quirk_echoes_empty_reasoning(model, suites):
+    suite = suites["tool_use"]
+    task = next(t for t in suite.load_tasks() if t["id"] == "tool-01")
+    client = _ReasoningClient(task, reasoning="")
+    rec = run_single(client, model, model.id, suite, task, 0, _settings(), {"send_reasoning": True})
+    assert rec["passed"] and rec["error"] is None
+    assert len(client.calls) == 2
